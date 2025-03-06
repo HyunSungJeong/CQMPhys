@@ -43,7 +43,6 @@ function T_I_diagram(J)
         y = [0.9, 0.15];
         %annotation('arrow',x,y,'Linewidth',0.8);
 
-        saveas(gcf,fullfile('/home/hyunsung/MyWork/Figures','T_I_J=0.0625.png'),'png');
         hold off;
     end
 
@@ -102,7 +101,6 @@ function T_I_diagram(J)
         %y = [0.9, 0.15];
         %annotation('arrow',x,y,'Linewidth',0.8);
 
-        saveas(gcf,fullfile('/home/hyunsung/MyWork/Figures','T_I_J=0.1.png'),'png');
         hold off;
     end
 

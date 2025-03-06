@@ -447,12 +447,12 @@ function [axes, varargout] = SLplot(X, Y, varargin)
             end
         end
 
-        minExp_Y = min(minExp_arr);
-        maxExp_Y = max(maxExp_arr);
+        YminExp = min(minExp_arr);
+        YmaxExp = max(maxExp_arr);
 
         if YexpLim_spec
-            minExp_Y = YexpLim(1);
-            maxExp_Y = YexpLim(2);
+            YminExp = YexpLim(1);
+            YmaxExp = YexpLim(2);
         end
 
         if YmaxExp - YminExp < 5

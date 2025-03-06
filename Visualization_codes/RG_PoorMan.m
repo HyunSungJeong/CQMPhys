@@ -1,6 +1,6 @@
 function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
 
-    h = -1e-5;
+    h = -1e-4;
     D0 = 1;
     J = J0;
     K = K0;
@@ -51,7 +51,7 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
     I_out = [];
     log_D_out = [];
 
-    while(log_D > -24)
+    while(log_D > log(1e-24))
         der = zeros(4,3);
         der(1,1) = Der('J',J,K,I,order);
         der(1,2) = Der('K',J,K,I,order);
@@ -91,27 +91,10 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
             log_D_out = [log_D_out, log_D];
         end
 
-        if rem(cnt,5e4) == 0
-            disp(log_D);
+        if rem(cnt,2e4) == 0
+            disp(log_D/log(10));
         end
         cnt = cnt + 1;
     end
-    
-    %{
-    figure;
-    hold on;
-    legend('AutoUpdate','on');
-    plot(log_D_out,J_out,'Color','red','LineWidth',1);
-    plot(log_D_out,K_out,'Color','green','LineWidth',1);
-    plot(log_D_out,I_out,'Color','blue','LineWidth',1);
-    ylim([0.01,200]);
 
-    legends = {'J', 'K', 'I'};
-    legend(legends,'Location','northeast','FontSize',25);
-    set(gca,'XScale','linear','YScale','log','fontsize',20);
-    xlabel('$\log_{10} \frac{D}{D_{0}}$','Interpreter','latex','FontSize',25);
-    ylabel('Parameter Values','Interpreter','latex','FontSize',25);
-    title('RG flow by poor man''s scaling','FontSize',15);
-    hold off;
-    %}
 end

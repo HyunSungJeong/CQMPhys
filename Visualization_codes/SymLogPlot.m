@@ -1,4 +1,4 @@
-function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
+function SymLogPlot(X, Y, color, varargin)
     
     % <Description>
     %
@@ -80,9 +80,6 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
     end
     
     if isequal(class(color),'char')
-        color = {color};
-        lenC = 1;
-    elseif isequal(class(color),'double') && length(color) == 3
         color = {color};
         lenC = 1;
     elseif isequal(class(color),'cell')
@@ -274,9 +271,6 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
     end
 
     %% Convert data for plotting
-    axes = gca;
-    fig = gcf;
-
     if isequal(XScale,'symlog')
 
         sign_X = '';
@@ -286,19 +280,14 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
         for it = (1:numel(X))
 
             X_temp = X{it};
-            
-            % Update the sign for the dataset:
-            % "positive" if the dataset X contains only positive values
-            % "negative" if the dataset X contains only negative values
-            % "undefined" if the dataset X contains both positive and negative values
-            if all(X_temp>0)
-                minExp_arr(it) = floor(log(min(X_temp))/log(10));   
-                % largest integer whose power by 10 is smaller than the absolute value of any element of X_temp
-                % i.e. all(abs(X_temp) > 10^minExp_arr(it))
-                maxExp_arr(it) = ceil(log(max(X_temp))/log(10));
-                % smallest integer whose power by 10 is larger than the absolute value of any element of X_temp
-                % i.e. all(abs(X_temp) < 10^maxExp_arr(it))
 
+            %if ~all(X_temp~=0)
+            %    error('ERR: X must not contain zero in symlog scale');
+            %end
+
+            if all(X_temp>0)
+                minExp_arr(it) = floor(log(min(X_temp))/log(10));
+                maxExp_arr(it) = ceil(log(max(X_temp))/log(10));
                 if ~isequal(sign_X,'undefined')
                     if isequal(sign_X,'negative')
                         sign_X = 'undefined';
@@ -309,12 +298,7 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
 
             elseif all(X_temp<0)
                 minExp_arr(it) = floor(log(-max(X_temp))/log(10));
-                % largest integer whose power by 10 is smaller than the absolute value of any element of X_temp
-                % i.e. all(abs(X_temp) > 10^minExp_arr(it))
                 maxExp_arr(it) = ceil(log(-min(X_temp))/log(10));
-                % smallest integer whose power by 10 is larger than the absolute value of any element of X_temp
-                % i.e. all(abs(X_temp) < 10^maxExp_arr(it))
-                
                 if ~isequal(sign_X,'undefined')
                     if isequal(sign_X,'positive')
                         sign_X = 'undefined';
@@ -327,35 +311,23 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                 pos_X = X_temp(X_temp>0);
                 neg_X = X_temp(X_temp<0);
                 minExp_arr(it) = min( floor(log(min(pos_X))/log(10)), floor(log(-max(neg_X))/log(10)) );
-                % largest integer whose power by 10 is smaller than the absolute value of any element of X_temp
-                % i.e. all(abs(X_temp) > 10^minExp_arr(it))
                 maxExp_arr(it) = max( ceil(log(max(pos_X))/log(10)), ceil(log(-min(neg_X))/log(10)) );
-                % smallest integer whose power by 10 is larger than the absolute value of any element of X_temp
-                % i.e. all(abs(X_temp) < 10^maxExp_arr(it))
                 sign_X = 'undefined';
 
             end
         end
 
         minExp = min(minExp_arr);
-        % largest integer whose power by 10 is smaller than the absolute value of any input X
-        % i.e. all(abs(X_temp) > 10^minExp_arr(it))
         maxExp = max(maxExp_arr);
-        % smallest integer whose power by 10 is larger than the absolute value of any input X
-        % i.e. all(abs(X) < 10^maxExp_arr(it))
 
-        if maxExp - minExp < 5
+        if maxExp - minExp > 5
+            minTick = 5*floor(minExp/5);
+            maxTick = 5*floor(maxExp/5);
+            tickInterval = 5*ceil((maxTick-minTick)/25);
+        else
             minTick = minExp;
             maxTick = maxExp;
             tickInterval = 1;
-        elseif ceil(maxExp/2) - ceil(minExp/2) < 5
-            minTick = 2*ceil(minExp/2);
-            maxTick = 2*ceil(maxExp/2);
-            tickInterval = 2;
-        else
-            minTick = 5*ceil(minExp/5);
-            maxTick = 5*floor(maxExp/5);
-            tickInterval = 5*ceil((maxTick-minTick)/25);
         end
 
         % Normalize x-coordinates
@@ -377,26 +349,16 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
         % generate xtick positions and their labels
         temp = (minTick : tickInterval : maxTick);
         XtickPositions = [];
-        XminorTickPositions = [];
-
         for it = (1:numel(temp))
             XtickPositions = [XtickPositions, ...
                                 Xzerowidth + (1-Xzerowidth-0.05)*(temp(it) - minTick)/(maxExp - minTick)];
         end
         
-        for it = (minTick:maxTick)
-            if ~ismember(it, temp)
-                XminorTickPositions = [XminorTickPositions, ...
-                                        Xzerowidth + (1-Xzerowidth-0.05)*(it - minTick)/(maxExp - minTick)];
-            end
-        end
-        
         XtickLabels = cell(0,0);
         switch sign_X
-            case 'undefined'    % sign of dataset X is "undefined"
+            case 'undefined'
                 if XcontAtzero
-                    XtickPositions = [-flip(XtickPositions(2:end)), XtickPositions];
-                    XminorTickPositions = [-flip(XminorTickPositions), XminorTickPositions];
+                    XtickPositions = [-flip(XtickPositions(2:end)),XtickPositions];
                     
                     temp = flip(temp);
                     for it = (1:numel(temp)-1)
@@ -409,7 +371,6 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                     end
                 else
                     XtickPositions = [-flip(XtickPositions), 0, XtickPositions];
-                    XminorTickPositions = [-flip(XminorTickPositions), XminorTickPositions];
 
                     temp = flip(temp);
                     for it = (1:numel(temp))
@@ -424,7 +385,7 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
 
                 
 
-            case 'positive'     % sign of dataset X is "positive"
+            case 'positive'
 
                 if XcontAtzero
                     error('''XcontAtzero'' can only be used when the X data contains both positive and negative values');
@@ -436,7 +397,7 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                 end
                 XtickLabels = cat(2,'0',XtickLabels);
 
-            case 'negative'     % sign of dataset X is "negative"
+            case 'negative'
 
                 if XcontAtzero
                     error('''XcontAtzero'' can only be used when the X data contains both positive and negative values');
@@ -449,24 +410,8 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                 end
                 XtickLabels = cat(2,XtickLabels,'0');
         end
-        
-        axes.XAxis.Scale = 'linear';
-        if isequal(sign_X,'negative')
-            axes.XAxis.Limits = [-1,0.1];
-        elseif isequal(sign_X,'positive')
-            axes.XAxis.Limits = [-0.1,1];
-        else
-            axes.XAxis.Limits = [-1,1];
-        end
-        axes.XAxis.TickValues = XtickPositions;
-        axes.XAxis.TickLabels = XtickLabels;
-        axes.XAxis.TickLabelInterpreter = 'latex';
-        axes.XAxis.MinorTickValues = XminorTickPositions;
 
-    else
-        axes.XAxis.Scale = XScale;
     end
-
 
 
     if isequal(YScale,'symlog')
@@ -479,20 +424,15 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
 
             Y_temp = Y{it};
 
+            %if ~all(Y_temp~=0)
+            %    error('ERR: Y must not contain zero in symlog scale');
+            %end
+
             
-            % Update the sign for the dataset Y:
-            % "positive" if the dataset Y contains only positive values
-            % "negative" if the dataset Y contains only negative values
-            % "undefined" if the dataset Y contains both positive and negative values
+
             if all(Y_temp>0)
-
                 minExp_arr(it) = floor(log(min(Y_temp))/log(10));
-                % largest integer whose power by 10 is smaller than the absolute value of any element of Y_temp
-                % i.e. all(abs(Y_temp) > 10^minExp_arr(it))
                 maxExp_arr(it) = ceil(log(max(Y_temp))/log(10));
-                % smallest integer whose power by 10 is larger than the absolute value of any element of Y_temp
-                % i.e. all(abs(Y_temp) < 10^minExp_arr(it))
-
                 if ~isequal(sign_Y,'undefined')
                     if isequal(sign_Y,'negative')
                         sign_Y = 'undefined';
@@ -501,16 +441,9 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                     end
                 end
 
-
             elseif all(Y_temp<0)
-
                 minExp_arr(it) = floor(log(-max(Y_temp))/log(10));
-                % largest integer whose power by 10 is smaller than the absolute value of any element of Y_temp
-                % i.e. all(abs(Y_temp) > 10^minExp_arr(it))
                 maxExp_arr(it) = ceil(log(-min(Y_temp))/log(10));
-                % smallest integer whose power by 10 is larger than the absolute value of any element of Y_temp
-                % i.e. all(abs(Y_temp) < 10^minExp_arr(it))
-
                 if ~isequal(sign_Y,'undefined')
                     if isequal(sign_Y,'positive')
                         sign_Y = 'undefined';
@@ -519,17 +452,11 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                     end
                 end
 
-
             else
                 pos_Y = Y_temp(Y_temp>0);
                 neg_Y = Y_temp(Y_temp<0);
                 minExp_arr(it) = min( floor(log(min(pos_Y))/log(10)), floor(log(-max(neg_Y))/log(10)) );
-                % largest integer whose power by 10 is smaller than the absolute value of any element of Y_temp
-                % i.e. all(abs(Y_temp) > 10^minExp_arr(it))
                 maxExp_arr(it) = max( ceil(log(max(pos_Y))/log(10)), ceil(log(-min(neg_Y))/log(10)) );
-                % smallest integer whose power by 10 is larger than the absolute value of any element of Y_temp
-                % i.e. all(abs(Y_temp) < 10^minExp_arr(it))
-
                 sign_Y = 'undefined';
             end
         end
@@ -537,18 +464,14 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
         minExp = min(minExp_arr);
         maxExp = max(maxExp_arr);
 
-        if maxExp - minExp < 5
+        if maxExp - minExp > 5
+            minTick = 5*floor(minExp/5);
+            maxTick = 5*floor(maxExp/5);
+            tickInterval = 5*ceil((maxTick-minTick)/25);
+        else
             minTick = minExp;
             maxTick = maxExp;
             tickInterval = 1;
-        elseif ceil(maxExp/2) - ceil(minExp/2) < 5
-            minTick = 2*ceil(minExp/2);
-            maxTick = 2*ceil(maxExp/2);
-            tickInterval = 2;
-        else
-            minTick = 5*ceil(minExp/5);
-            maxTick = 5*floor(maxExp/5);
-            tickInterval = 5*ceil((maxTick-minTick)/25);
         end
 
         % Normalize y-coordinates
@@ -570,23 +493,16 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
         % generate ytick positions and their labels
         temp = (minTick : tickInterval : maxTick);
         YtickPositions = [];
-        YminorTickPositions = [];
         for it = (1:numel(temp))
             YtickPositions = [YtickPositions, ...
                                 Yzerowidth + (1-Yzerowidth-0.05)*(temp(it) - minTick)/(maxExp - minTick)];
         end
 
-        for it = (minExp:maxExp)
-            YminorTickPositions = [YminorTickPositions, ...
-                                    Yzerowidth + (1-Yzerowidth-0.05)*(it - minTick)/(maxExp - minTick)];
-        end
-
         YtickLabels = cell(0,0);
         switch sign_Y
-            case 'undefined'    % sign of dataset Y is "undefined"
+            case 'undefined'
                 if YcontAtzero
-                    YtickPositions = [-flip(YtickPositions(2:end)), YtickPositions];
-                    YminorTickPositions = [-flip(YminorTickPositions), YminorTickPositions];
+                    YtickPositions = [-flip(YtickPositions(2:end)),YtickPositions];
 
                     temp = flip(temp);
                     for it = (1:numel(temp)-1)
@@ -599,7 +515,6 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                     end
                 else
                     YtickPositions = [-flip(YtickPositions), 0, YtickPositions];
-                    YminorTickPositions = [-flip(YminorTickPositions), YminorTickPositions];
 
                     temp = flip(temp);
                     for it = (1:numel(temp))
@@ -612,7 +527,7 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                     end
                 end
 
-            case 'positive'     % sign of dataset Y is "positive"
+            case 'positive'
 
                 if YcontAtzero
                     error('''YcontAtzero'' can only be used when the Y data contains both positive and negative values');
@@ -624,7 +539,7 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
                 end
                 YtickLabels = cat(2,'0',YtickLabels);
 
-            case 'negative'     % sign of dataset Y is "negative"
+            case 'negative'
 
                 if YcontAtzero
                     error('''YcontAtzero'' can only be used when the Y data contains both positive and negative values');
@@ -640,27 +555,10 @@ function [axes, fig, X, Y] = SymLogPlot(X, Y, color, varargin)
         
         [YtickPositions, ids] = sort(YtickPositions);
         YtickLabels = YtickLabels(ids);
-
-        axes.YAxis.Scale = 'linear';
-        if isequal(sign_Y,'negative')
-            axes.YAxis.Limits = [-1,0.1];
-        elseif isequal(sign_Y,'positive')
-            axes.YAxis.Limits = [-0.1,1];
-        else
-            axes.YAxis.Limits = [-1,1];
-        end
-        axes.YAxis.TickValues = YtickPositions;
-        axes.YAxis.TickLabels = YtickLabels;
-        axes.YAxis.TickLabelInterpreter = 'latex';
-        axes.YAxis.MinorTickValues = YminorTickPositions;
-
-    else
-        axes.YAxis.Scale = YScale;
     end
 
 
 %% Plot
-%{
 hold on;
     if isequal(XScale,'symlog')
         if isequal(YScale,'symlog')
@@ -672,9 +570,35 @@ hold on;
                     plot(X{it},Y{it},style{it},'MarkerSize',MarkerSize,'color',color{it});
                 end
             end
-            axes.XAxis.FontSize = 10;
-            axes.YAxis.FontSize = 10;
+            set(gca,'XScale','linear','YScale','linear');
+            XAxisProperties = get(gca, 'XAxis');
+            XAxisProperties.FontSize = 15;
+            XAxisProperties.TickLabelInterpreter = 'latex';
+            YAxisProperties = get(gca, 'YAxis');
+            YAxisProperties.FontSize = 15;
+            YAxisProperties.TickLabelInterpreter = 'latex';
+            % For conventional uses, 'tex'
 
+            if isequal(sign_X,'negative')
+                xlim([-1,0.1]);
+            elseif isequal(sign_X,'positive')
+                xlim([-0.1,1]);
+            else
+                xlim([-1,1]);
+            end
+
+            if isequal(sign_Y,'negative')
+                ylim([-1,0.1]);
+            elseif isequal(sign_Y,'positive')
+                ylim([-0.1,1]);
+            else
+                ylim([-1,1]);
+            end
+
+            xticks(XtickPositions);
+            xticklabels(XtickLabels);
+            yticks(YtickPositions);
+            yticklabels(YtickLabels);
             if PlotLegend
                 legend(legends,'Location','northeast','FontSize',15);
             end
@@ -688,10 +612,17 @@ hold on;
                     plot(X{it},Y{it},style{it},'MarkerSize',MarkerSize,'color',color{it});
                 end
             end
-
-            axes.XAxis.FontSize = 10;
-            axes.YAxis.FontSize = 10;
-            
+            set(gca,'XScale','linear','YScale',YScale);
+            XAxisProperties = get(gca, 'XAxis');
+            XAxisProperties.FontSize = 15;
+            XAxisProperties.TickLabelInterpreter = 'latex';
+            YAxisProperties = get(gca, 'YAxis');
+            YAxisProperties.FontSize = 15;
+            YAxisProperties.TickLabelInterpreter = 'latex';
+            % For conventional uses, 'tex'
+            xlim([-1,1]);
+            xticks(XtickPositions);
+            xticklabels(XtickLabels);
             if PlotLegend
                 legend(legends,'Location','northeast','FontSize',15);
             end
@@ -707,9 +638,23 @@ hold on;
                     plot(X{it},Y{it},style{it},'MarkerSize',MarkerSize,'color',color{it});
                 end
             end
-            axes.XAxis.FontSize = 10;
-            axes.YAxis.FontSize = 10;
-
+            set(gca,'XScale',XScale,'YScale','linear');
+            XAxisProperties = get(gca, 'XAxis');
+            XAxisProperties.FontSize = 15;
+            XAxisProperties.TickLabelInterpreter = 'latex';
+            YAxisProperties = get(gca, 'YAxis');
+            YAxisProperties.FontSize = 15;
+            YAxisProperties.TickLabelInterpreter = 'latex'; 
+            % For conventional uses, 'tex'
+            if isequal(sign_Y,'negative')
+                ylim([-1,0.1]);
+            elseif isequal(sign_Y,'positive')
+                ylim([-0.1,1]);
+            else
+                ylim([-1,1]);
+            end
+            yticks(YtickPositions);
+            yticklabels(YtickLabels);
             if PlotLegend
                 legend(legends,'Location','northeast','FontSize',15);
             end
@@ -722,13 +667,13 @@ hold on;
                     plot(X{it},Y{it},style{it},'MarkerSize',MarkerSize,'color',color{it});
                 end
             end
-
+            set(gca,'XScale',XScale,'YScale',YScale);
             if PlotLegend
                 legend(legends,'Location','northeast','FontSize',15);
             end
         end
 
     end
-    %}
 
+    
 end

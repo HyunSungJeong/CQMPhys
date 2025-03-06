@@ -10,10 +10,12 @@
 % rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/Kondo_Aniso /mnt/c/Users/82104/Documents/Physics/Research/data
 % (To sync ThsoK data)
 % rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/ThsoK /mnt/c/Users/82104/Documents/Physics/Research/data
+% (To sync Quartic data)
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/Quartic /mnt/c/Users/82104/Documents/Physics/Research/data
 % (To sync LineSearch data)
 % rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/LineSearch /mnt/c/Users/82104/Documents/Physics/Research/data
 
-clear;
+%clear;
 %% Choose Calculation Type
 strtmp = cell(3,1);
 strtmp{1} = '1: TsoK_NRG';
@@ -21,7 +23,8 @@ strtmp{2} = '2: TsoK_Aniso_NRG';
 strtmp{3} = '3: TCK_Aniso_NRG';
 strtmp{4} = '4: Kondo_Aniso_NRG';
 strtmp{5} = '5: ThsoK_NRG';
-strtmp{6} = '6: LineSearch';
+strtmp{5} = '6: Quartic_NRG';
+strtmp{6} = '7: LineSearch';
 dispbox('-width',75,strtmp{:});
 fprintf('Choose index of calculation type to plot\n');
 intmp = input('>>> ');
@@ -39,6 +42,8 @@ while isempty(path)
     elseif intmp == 5
         path = 'C:\Users\82104\Documents\Physics\Research\data\ThsoK';
     elseif intmp == 6
+        path = 'C:\Users\82104\Documents\Physics\Research\data\Quartic';
+    elseif intmp == 7
         path = 'C:\Users\82104\Documents\Physics\Research\data\LineSearch';
     else
         fprintf('WRN: Invalid input\n');
@@ -802,8 +807,12 @@ elseif intmp == 2   % TsoK_Aniso_NRG
     end
 
     if avail(1) && chosen(1)
+        plotE(Eflow{1}, Eflow{2}, 'title', '$ \mathrm{ RGflow: \ U(1)_{c1} \times U(1)_{c2} \times SU(2)_{sp}} $', 'FontSize', 15, ...
+                                                'Emax',1.3,'legmax',8,'Qdiff',[0,0,0]);
+        %{
         plotE(Eflow{1}, Eflow{2}, 'title', ['$J_{0}=',sprintf('%.15g',J0),'\, K_{\perp}=',sprintf('%.15g',K_perp),'\, K_{z}=',sprintf('%.15g',K_z),'\, I_{0}=',sprintf('%.15g',I0),'$'], ...
                                                 'Emax',3,'legmax',13,'Qdiff',[0,0,0]);
+        %}
     end
 
     if avail(2) && avail(3)
@@ -855,11 +864,14 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             ax.YAxis.FontSize = 5;
             legend(legends,'Interpreter','latex','Location','best','FontSize',25);
 
-            set(gca,'XScale','log','YScale','log','FontSize',20);
-            xlabel('$\omega$','Interpreter','latex','FontSize',25);
-            ylabel('$\chi_{\mathrm{imp}} (\omega)$','Interpreter','latex','FontSize',25);
+            set(gca,'XScale','log','YScale','log','FontSize',25);
+            xlabel('$\omega$','Interpreter','latex','FontSize',30);
+            ylabel('$\chi_{\mathrm{imp}} (\omega)$','Interpreter','latex','FontSize',30);
+            %title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities}$'],'Interpreter','latex','FontSize',30);
+            %{}
             title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
                         sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+            %}
 
             %{}
             legend('AutoUpdate','off');
@@ -876,7 +888,7 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             y1 = power(10,y1);
             text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
             plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
-            text(text_x, text_y, text1,'Interpreter','latex','FontSize',15);
+            text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
 
             x2 = fit_range(2,:);
             text_x = (x2(1)+x2(2))/2;
@@ -888,11 +900,11 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             y2 = power(10,y2);
             text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color',[0.85,0.325,0.098],'LineWidth',1);
-            text(text_x, text_y, text2,'Interpreter','latex','FontSize',15);
+            text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
 
             x3 = fit_range(3,:);
-            text_x = (x3(1)+x3(2))/2;
-            text_y = polyval(a3,text_x) - 2.3;
+            text_x = (x3(1)+x3(2))/2 - 1;
+            text_y = polyval(a3,text_x) - 3;
             text_x = power(10, text_x);
             text_y = power(10, text_y);
             y3 = polyval(a3,x3) - 0.5;
@@ -900,7 +912,7 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             y3 = power(10,y3);
             text3 = ['$w^{',sprintf('%.2f',a3(1)),'}$'];
             plot(x3,y3,'-','Color',[0.929,0.694,0.125],'LineWidth',1);
-            text(text_x, text_y, text3,'Interpreter','latex','FontSize',15);
+            text(text_x, text_y, text3,'Interpreter','latex','FontSize',20);
             legend('AutoUpdate','on');
             %}
 
@@ -1031,10 +1043,10 @@ elseif intmp == 2   % TsoK_Aniso_NRG
 
         figure;
         hold on;
-        plot(Temps,exp(Sent_imp),'Linewidth',1.5);
+        plot(Temps,exp(Sent_imp),'Linewidth',2);
         xlim([1e-22,1]);
         ylim([1,4.1])
-        plot([1e-22,1],[sqrt(8),sqrt(8)],'--','LineWidth',1,'color',[.7,.7,.7]);
+        plot([1e-22,1],[sqrt(8),sqrt(8)],'--','LineWidth',1.5,'color',[.7,.7,.7]);
         yaxisproperties= get(gca, 'YAxis');
         yaxisproperties.TickLabelInterpreter = 'tex';
         set(gca, 'TickLabelInterpreter', 'latex');
@@ -1045,11 +1057,14 @@ elseif intmp == 2   % TsoK_Aniso_NRG
         ax = gca;
         ax.XAxis.FontSize = 5;
         ax.YAxis.FontSize = 5;
-        set(gca,'XScale','log','YScale','linear','fontsize',20);
-        xlabel('T','Interpreter','latex','FontSize',25);
-        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',25);
+        set(gca,'XScale','log','YScale','linear','fontsize',25);
+        xlabel('T','Interpreter','latex','FontSize',30);
+        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',30);
+        title('$\mathrm{Impurity \ contribution \ to \ entropy}$','Interpreter','latex','FontSize',30);
+        %{
         title(['$\mathrm{Impurity \ contribution \ to \ entropy} \ (J_{0}, K_{\perp}, K_{z}, I_{0}) = (', ...
                         sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+        %}
         hold off;
     end
 
@@ -2672,6 +2687,669 @@ elseif intmp == 5   % ThsoK_NRG
             hold off;
         end
     end
+
+elseif intmp == 6   % Quartic_NRG
+    
+    FileInfo = dir(path);
+    strtmp = cell(0,0);
+    cnt = 1;
+    for it = (1:numel(FileInfo))
+        DirName = FileInfo(it).name;
+        if DirName(1) == 'K' || DirName(1) == 'T'
+            strtmp = cat(2, strtmp, [sprintf('%.15g',cnt),': ',DirName]);
+            cnt = cnt + 1;
+        end
+    end
+    dispbox('-width',130,strtmp{:});
+    fprintf('Choose the index of the data set to plot\n');
+
+    ValidIdx = false;
+
+    while ~ValidIdx
+        idx = input('>>> ');
+        if ismember(idx,(1:numel(strtmp)))
+            ValidIdx = true;
+        else
+            fprintf('WRN: Invalid input\n');
+        end
+    end
+
+    % extract parameters from folder name
+    tmp = sscanf(strtmp{idx}, [sprintf('%d',idx),': K_z=%f_Q=%f_T=%f']);
+    K_z = tmp(1);
+    Q = tmp(2);
+    T = tmp(3);
+
+    tmp = strtmp{idx};
+    path = [path, filesep, tmp(numel(num2str(idx))+3:end)];
+
+    % make a list of unnecessary file infos
+    FileInfo = dir(path);
+    EraseIdx = [];
+    for it = (1:numel(FileInfo))
+        DirName = FileInfo(it).name;
+        if isequal(DirName,'.')                 % Erase '.'
+            EraseIdx = cat(2,EraseIdx,it);
+        elseif isequal(DirName,'..')            % Erase '..'
+            EraseIdx = cat(2,EraseIdx,it);
+        elseif isequal(DirName,'Quartic')          % Erase log files
+            EraseIdx = cat(2,EraseIdx,it);
+        end
+    end
+    FileInfo(EraseIdx) = [];    % Erase selected unnecessary file infos
+
+    Eflow = cell(2,1);      % RG flow data. 1: Etot, 2: Qtot
+    ImpDyn = cell(1,1);     % Impurity dynamical susceptibilities. 1: ImpOrb_z
+    BathDyn = cell(4,1);    % Bath dynamical susceptibilities. 1: BathSp1, 2: BathSp2, 3: BathSptot, 4: BathOrb_z
+    avail = false*ones(1,10);
+    % RGflow, ImpDyn, Second derivatives of ImpDyn, BathDyn, Second derivatives of BathDyn,
+    % Spin-Spin correlators, Orbital-Orbital correlators, 
+    % Cumulated spin correlators, Cumulated orbital correlators
+
+    % Check availabel and unavailable data
+    for it = (1:numel(FileInfo))
+        tmp = load([FileInfo(it).folder, filesep, FileInfo(it).name]);
+        field = fieldnames(tmp);
+
+        switch FileInfo(it).name
+            case 'Etot.mat'
+                Eflow{1} = getfield(tmp, field{1});
+                avail(1) = true;
+            case 'Qtot.mat'
+                Eflow{2} = getfield(tmp, field{1});
+                avail(1) = true;
+            case 'ocont.mat'
+                ocont = getfield(tmp, field{1});
+            case 'NRG_Op=ImpOrb_z.mat'
+                ImpDyn{1} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=BathSp1.mat'
+                BathDyn{1} = getfield(tmp, field{1});
+                avail(4) = true;
+                avail(5) = true;
+            case 'NRG_Op=BathSp2.mat'
+                BathDyn{2} = getfield(tmp, field{1});
+                avail(4) = true;
+                avail(5) = true;
+            case 'NRG_Op=BathSptot.mat'
+                BathDyn{3} = getfield(tmp, field{1});
+                avail(4) = true;
+                avail(5) = true;
+            case 'NRG_Op=BathOrb_z.mat'
+                BathDyn{4} = getfield(tmp, field{1});
+                avail(4) = true;
+                avail(5) = true;
+            case 'Sent_imp.mat'
+                Sent_imp = getfield(tmp, field{1});
+                avail(6) = true;
+            case 'Temps.mat'
+                Temps = getfield(tmp, field{1});
+            case 'spin_spin_correlators.mat'
+                Sp_corr = getfield(tmp,field{1});
+                avail(7) = true;
+                avail(9) = true;
+            case 'orbital_orbital_correlators.mat'
+                Orb_corr = getfield(tmp,field{1});
+                avail(8) = true;
+                avail(10) = true;
+            otherwise
+                fprintf('WRN: unknown data type');
+        end
+    end
+
+    strtmp = cell(1,0);
+    options = [];
+    if avail(1)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': RG flow diagram']});
+        options = [options,1];
+    end
+    if avail(2)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Impurity dynamic susceptibilities']});
+        options = [options,2];
+    end
+    if avail(3)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Second derivatives of impurity dynamic susceptibilities']});
+        options = [options,3];
+    end
+    if avail(4)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Bath dynamic susceptibilities']});
+        options = [options,4];
+    end
+    if avail(5)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Second derivatives of bath dynamic susceptibilities']});
+        options = [options,5];
+    end
+    if avail(6)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Impurity contribution to entropy']});
+        options = [options,6];
+    end
+    if avail(7)
+        strtmp = cat(2,strtmp,{[sprintf('%d',numel(strtmp)+1),': sp-sp correlators']});
+        options = [options,7];
+    end
+    if avail(8)
+        strtmp = cat(2,strtmp,{[sprintf('%d',numel(strtmp)+1),': orbz-orbz correlators']});
+        options = [options,8];
+    end
+    if avail(9)
+        strtmp = cat(2,strtmp,{[sprintf('%d',numel(strtmp)+1),': cumulated spin-spin correlators']});
+        options = [options,9];
+    end
+    if avail(10)
+        strtmp = cat(2,strtmp,{[sprintf('%d',numel(strtmp)+1),': cumulated orbz-orbz correlators']});
+        options = [options,10];
+    end
+    strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': All of the above']});
+    dispbox('-width',130,strtmp{:});
+
+    fprintf('Which one do you want to plot?\n');
+    intmp = input('>>> ');
+
+    if intmp == numel(options)+1    % plot all
+        chosen = avail;
+    else
+        chosen = false*ones(1,10);
+        chosen(options(intmp)) = true;
+        while ~isempty(intmp) && ~isequal(chosen, avail)
+            fprintf('Type the index of data you want to plot\n');
+            fprintf('(Press enter to finish)\n');
+            intmp = input('>>> ');
+            if intmp == numel(options) + 1
+                chosen = avail;
+            else
+                chosen(options(intmp)) = true;
+            end
+        end
+    end
+
+    if avail(1) && chosen(1)
+        %{
+        plotE(Eflow{1}, Eflow{2}, 'title', '$ \mathrm{ RGflow: \ U(1)_{c1} \times U(1)_{c2} \times SU(2)_{sp}} $', 'FontSize', 15, ...
+                                                'Emax',1.3,'legmax',8,'Qdiff',[0,0,0]);
+        %}
+        %{}
+        plotE(Eflow{1}, Eflow{2}, 'title', '$ \mathrm{ RGflow: \ U(1)_{c1} \times U(1)_{c2} \times SU(2)_{sp1} \times SU(2)_{sp2}} $', 'FontSize', 13, ...
+                                                'Emax',3,'legmax',13,'Qdiff',[0,0,0,0]);
+        %}
+    end
+
+    if avail(2) && avail(3)
+
+        names = {'$T^{z}$'};
+        legends = cell(0,0);
+        for it = (1:1)
+            if isempty(ImpDyn{it})
+                ImpDyn{it} = [];
+            else
+                legends = cat(2,legends,names{it});
+            end
+        end
+        
+        num_ImpDyn = numel(ImpDyn);         % number of impurity dynamic susceptibilities
+
+        log_T = log(ocont(ocont>0))./log(10);       % log temperatures
+        log_ImpDyn = cell(num_ImpDyn,1);            % log impurity dynamic sysceptibilities
+        log_ImpDyn_1stDer = cell(num_ImpDyn,1);     % first derivatives
+        log_T_1stDer = cell(num_ImpDyn,1);          % log temperatures for first derivatives
+        log_ImpDyn_2ndDer = cell(num_ImpDyn,1);     % second derivatives
+        log_T_2ndDer = cell(num_ImpDyn,1);          % log temperatures for second derivatives
+
+        for it = (1:num_ImpDyn)
+            tmp = ImpDyn{it};
+            log_ImpDyn{it} = log(tmp(ocont>0))./log(10);
+
+            log_ImpDyn_1stDer{it} = diff(log_ImpDyn{it},1)./diff(log_T,1);      % first derivative
+            tmp = movmean(log_T, [0,1]);                                        
+            log_T_1stDer{it} = tmp(1:end-1);                                    % log temperatures for first derivatives
+
+            log_ImpDyn_2ndDer{it} = diff(log_ImpDyn_1stDer{it},1)./diff(log_T_1stDer{it},1);    % second derivative
+            tmp = movmean(log_T_1stDer{it}, [0,1]);
+            log_T_2ndDer{it} = tmp(1:end-1);                                                    % log temperatures for second derivatives
+        end
+
+        if chosen(2)
+
+            figure;
+            
+            hold on;
+            linestyle = {'-', '-', '-'};
+            for it = (1:num_ImpDyn)
+                plot(ocont(ocont<1), ImpDyn{it}(ocont<1), 'LineWidth',2,'LineStyle',linestyle{it});
+            end
+            
+            %xlim([1e-25,1]);
+            %ylim([1e-7,1]);
+            ax = gca;
+            ax.XAxis.FontSize = 5;
+            ax.YAxis.FontSize = 5;
+            legend(legends,'Interpreter','latex','Location','best','FontSize',30);
+
+            set(gca,'XScale','log','YScale','log','FontSize',25);
+            xlabel('$\omega$','Interpreter','latex','FontSize',30);
+            ylabel('$\chi_{\mathrm{imp}} (\omega)$','Interpreter','latex','FontSize',30);
+            %title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities}$'],'Interpreter','latex','FontSize',30);
+            %{}
+            title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities} \ (\lambda_{z}, \lambda_{x}) = (', ...
+                        sprintf('%.15g',K_z/2),', ',sprintf('%.15g',Q),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',25);
+            %}
+
+            %{}
+            legend('AutoUpdate','off');
+            log_ImpDyn = cat(1,log_ImpDyn,{ zeros(1,numel(log_T)) ; zeros(1,numel(log_T)) } );
+            %log_ImpDyn = cat(1,log_ImpDyn,{log_ImpDyn{1}; zeros(1,numel(log_T))} );
+            fit_range = [-6, -11; 0, 0; 0, 0];
+            [a1,Rsq1,a2,Rsq2,~,~] = Insert(log_T, log_ImpDyn,fit_range);
+
+            x1 = fit_range(1,:);
+            text_x = (x1(1)+x1(2))/2 - 0.5;
+            text_y = polyval(a1,text_x) + 0.5;
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y1 = polyval(a1,x1) + 0.15;
+            x1 = power(10,x1);
+            y1 = power(10,y1);
+            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            %plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
+            plot(x1,y1,'-','Color','black','LineWidth',1);
+            text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
+
+            %{
+            x2 = fit_range(2,:);
+            text_x = (x2(1)+x2(2))/2 - 0.7;
+            text_y = polyval(a2,text_x) + 1.8;
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y2 = polyval(a2,x2)+0.5;
+            x2 = power(10,x2);
+            y2 = power(10,y2);
+            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            plot(x2,y2,'-','Color','black','LineWidth',1);
+            text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
+            %}
+            %}
+
+            hold off;
+        end
+
+        if chosen(3)
+            figure;
+            hold on;
+            linestyle = {'-', '-.', '--'};
+            legend('AutoUpdate','on');
+            for it = (1:num_ImpDyn)
+                X = log_T_2ndDer{it};
+                Y = log_ImpDyn_2ndDer{it};
+                plot(X, Y,'LineWidth',2,'LineStyle',linestyle{it});
+            end
+            legend('AutoUpdate','off');
+            for it = (1:num_ImpDyn)
+                [Minima, ~, MinPos] = LocMin(log_T_2ndDer{it}, log_ImpDyn_2ndDer{it});
+                [Maxima, ~, MaxPos] = LocMax(log_T_2ndDer{it}, log_ImpDyn_2ndDer{it});
+                plot(MinPos, Minima, 'o', 'Color', 'blue', 'LineWidth', 2);
+                plot(MaxPos, Maxima, 'o', 'Color', 'red', 'LineWidth', 2);
+            end
+            legend('AutoUpdate','on');
+            ax = gca;
+            ax.XAxis.FontSize = 5;
+            ax.YAxis.FontSize = 5;
+            xlim([log(T)/log(10)-1,3]);
+            ylim([-3,4]);
+            legend(legends,'Interpreter','latex','Location','northeast','FontSize',25);
+            set(gca,'XScale','linear','YScale','linear','fontsize',20);
+            xlabel('$\log T$','Interpreter','latex','FontSize',25);
+            ylabel('$\frac{d^{2} \log \chi''''}{d^{2} \log T} (\omega)$','Interpreter','latex','FontSize',25);
+            title(['$\mathrm{2nd \ Derivatives \ of \ Impurity \ Dynamic \ Susceptibilities} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
+                        sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',15);
+            hold off;
+        end
+
+    end
+
+    if avail(4) && avail(5)
+
+        names = {'$\vec{J}_{\mathrm{sp1}}$','$\vec{J}_{\mathrm{sp2}}$','$\vec{J}_{\mathrm{Sptot}}$','$J_{\mathrm{orb}}^{z}$'};
+        legends = cell(0,0);
+        for it = (1:4)
+            if isempty(BathDyn{it})
+                BathDyn(it) = [];
+            else
+                legends = cat(2,legends,names{it});
+            end
+        end
+
+        
+        num_BathDyn = numel(BathDyn);         % Number of bath dynamic susceptibilities
+
+        log_T = log(ocont(ocont>0))./log(10);       % Log temperatures
+        log_BathDyn = cell(num_BathDyn,1);          % Log bath dynamic susceptibilities
+        log_BathDyn_1stDer = cell(num_BathDyn,1);   % First derivatives
+        log_T_1stDer = cell(num_BathDyn,1);         % Log Temperatures for fisrt derivatives
+        log_BathDyn_2ndDer = cell(num_BathDyn,1);   % Second derivatives
+        log_T_2ndDer = cell(num_BathDyn,1);         % Log Temperatures for second derivatives
+
+        for it = (1:num_BathDyn)
+            tmp = BathDyn{it};
+            log_BathDyn{it} = log(tmp(ocont>0))./log(10);
+
+            log_BathDyn_1stDer{it} = diff(log_BathDyn{it},1)./diff(log_T,1);                  % First derivative
+            tmp = movmean(log_T, [0,1]);
+            log_T_1stDer{it} = tmp(1:end-1);                                                % Log Temperatures for fisrt derivatives
+
+            log_BathDyn_2ndDer{it} = diff(log_BathDyn_1stDer{it},1)./diff(log_T_1stDer{it},1);    % Second derivative
+            tmp = movmean(log_T_1stDer{it}, [0,1]);
+            log_T_2ndDer{it} = tmp(1:end-1);                                                % Log Temperatures for second derivatives
+        end
+        
+        if chosen(4)
+
+            figure;
+            hold on;
+            linestyle = {'-','-.','--',':'};
+            for it = (1:num_BathDyn)
+                plot(ocont(ocont < 1),BathDyn{it}(ocont < 1),linestyle{it},'Linewidth',2);
+            end
+            ax = gca;
+            ax.XAxis.FontSize = 5;
+            ax.YAxis.FontSize = 5;
+            legend(legends,'Interpreter','latex','Location','northeast','FontSize',30);
+            set(gca,'XScale','log','YScale','log','fontsize',25);
+            xlabel('$\omega$','Interpreter','latex','FontSize',30);
+            ylabel('$\chi'''' (\omega)$','Interpreter','latex','FontSize',30);
+            title(['$\mathrm{Bath \ Dynamic \ Susceptibilities} \ (\lambda_{z}, \lambda_{x}) = (', ...
+                        sprintf('%.15g',K_z/2),', ',sprintf('%.15g',Q),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',25);
+
+            %xlim([1e-25,1]);
+            %ylim([1e-20,1e5]);
+            %{}
+            legend('AutoUpdate','off');
+            fit_range = [-5, -10; -2.5, -4.5; -8, -13];
+            [a1,Rsq1,a2,Rsq2,a3,Rsq3] = Insert(log_T, log_BathDyn(2:4),fit_range);
+
+            x1 = fit_range(1,:);
+            text_x = (x1(1)+x1(2))/2 - 0.4;
+            text_y = polyval(a1,text_x) - 1.5;
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y1 = polyval(a1,x1) - 0.5;
+            x1 = power(10,x1);
+            y1 = power(10,y1);
+            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            %plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
+            plot(x1,y1,'-','Color','black','LineWidth',1);
+            text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
+
+            x2 = fit_range(2,:);
+            text_x = (x2(1)+x2(2))/2 - 0.7;
+            text_y = polyval(a2,text_x) + 2.3;
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y2 = polyval(a2,x2)+0.5;
+            x2 = power(10,x2);
+            y2 = power(10,y2);
+            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            %plot(x2,y2,'-','Color','black','LineWidth',1);
+            %plot(x2,y2,'-','Color',[0.85,0.325,0.098],'LineWidth',1);
+            %text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
+
+            x3 = fit_range(3,:);
+            text_x = (x3(1)+x3(2))/2 - 0.3;
+            text_y = polyval(a3,text_x) + 1.3;
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y3 = polyval(a3,x3) + 0.5;
+            x3 = power(10,x3);
+            y3 = power(10,y3);
+            text3 = ['$w^{',sprintf('%.2f',a3(1)),'}$'];
+            %plot(x3,y3,'-','Color',[0.929,0.694,0.125],'LineWidth',1);
+            plot(x3,y3,'-','Color','black','LineWidth',1);
+            text(text_x, text_y, text3,'Interpreter','latex','FontSize',20);
+            legend('AutoUpdate','on','location','southwest');
+            %}
+
+            hold off;
+        end
+
+        if chosen(5)
+            figure;
+            hold on;
+            linestyle = {'-', '-', '--'};
+            legend('AutoUpdate','on');
+            for it = (1:num_BathDyn)
+                plot(log_T_2ndDer{it}, log_BathDyn_2ndDer{it}, 'LineWidth', 2, 'LineStyle', linestyle{it});
+            end
+            legend('AutoUpdate','off');
+            for it = (1:num_BathDyn)
+                [Minima, ~, MinPos] = LocMin(log_T_2ndDer{it}, log_BathDyn_2ndDer{it});
+                [Maxima, ~, MaxPos] = LocMax(log_T_2ndDer{it}, log_BathDyn_2ndDer{it});
+                plot(MinPos, Minima, 'o', 'Color', 'blue', 'LineWidth', 2);
+                plot(MaxPos, Maxima, 'o', 'Color', 'red', 'LineWidth', 2);
+            end
+            legend('AutoUpdate','on');
+            ax = gca;
+            ax.XAxis.FontSize = 5;
+            ax.YAxis.FontSize = 5;
+            xlim([-23,3]);
+            ylim([-3,4]);
+            legend(legends,'Interpreter','latex','Location','northeast','FontSize',25);
+            set(gca,'XScale','linear','YScale','linear','fontsize',20);
+            xlabel('$\log T$','Interpreter','latex','FontSize',25);
+            ylabel('$\frac{d^{2} \log \chi''''}{d^{2} \log T} (\omega)$','Interpreter','latex','FontSize',25);
+            title(['$\mathrm{2nd \ Derivatives \ of \ Bath \ Dynamic \ Susceptibilities} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
+                        sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',15);
+            hold off;
+        end
+
+    end
+
+    if avail(6) && chosen(6)
+
+        figure;
+        hold on;
+        Sent_imp = exp(Sent_imp);
+        plot(Temps,Sent_imp,'Linewidth',2);
+        xlim([1e-24,1]);
+        ylim([1,2.1])
+        %plot([1e-22,1],[sqrt(8),sqrt(8)],'--','LineWidth',1.5,'color',[.7,.7,.7]);
+        yaxisproperties= get(gca, 'YAxis');
+        yaxisproperties.TickLabelInterpreter = 'tex';
+        set(gca, 'TickLabelInterpreter', 'latex');
+        ticks = {'1','2'};
+        yticklabels(ticks);
+        yticks([1,2]);
+
+        ax = gca;
+        ax.XAxis.FontSize = 5;
+        ax.YAxis.FontSize = 5;
+        set(gca,'XScale','log','YScale','linear','fontsize',30);
+        xlabel('T','Interpreter','latex','FontSize',30);
+        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',30);
+        title('$\mathrm{Impurity \ contribution \ to \ entropy}$','Interpreter','latex','FontSize',35);
+        %{
+        title(['$\mathrm{Impurity \ contribution \ to \ entropy} \ (K_{z}, Q) = (', ...
+                        sprintf('%.15g',K_z),', ',sprintf('%.15g',Q),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+        %}
+        hold off;
+    end
+
+    if avail(7)
+
+        Sp_corr = cell2mat(Sp_corr);
+        Sp_odd = Sp_corr(1:2:end);
+        Sp_even = Sp_corr(2:2:end);
+        Sp_avg = [];
+        Sp_cum = [];
+        Sp_cum_avg = [];
+
+        for it = (2:numel(Sp_corr)-1)
+            Sp_avg = [Sp_avg, (2*Sp_corr(it) + Sp_corr(it+1) + Sp_corr(it-1))/4];
+        end
+
+        for it = (1:numel(Sp_corr))
+            Sp_cum(it) = sum(Sp_corr(1:it));
+        end
+
+        for it = (2:numel(Sp_corr)-1)
+            Sp_cum_avg = [Sp_cum_avg, (2*Sp_cum(it) + Sp_cum(it+1) + Sp_cum(it-1))/4];
+        end
+
+        X = (1:numel(Sp_corr));
+        X_odd = (1:2:numel(Sp_corr));
+        X_even = (2:2:numel(Sp_corr));
+        X = 4.^(-X/2);
+        X_odd = 4.^(-X_odd/2);
+        X_even = 4.^(-X_even/2);
+
+        if chosen(7)
+
+            figure;
+            hold on;
+            
+            plot(X_odd,Sp_odd,'--','LineWidth',1.5);
+            plot(X_even,Sp_even,'--','LineWidth',1.5);
+            plot(X(2:end-1),Sp_avg,'-','LineWidth',1.5);
+    
+            xlim([X(end),X(1)]);
+            plot([X(end),X(1)],[0,0],'--','LineWidth',1,'color',[.7,.7,.7]);
+    
+            ax=gca;
+            ax.XAxis.FontSize = 15;
+            ax.YAxis.FontSize = 15;
+            set(gca,'XScale','log','YScale','linear','Xdir','reverse');
+            xlabel('$\Lambda^{-m/2} D$','Interpreter','latex','FontSize',25);
+            ylabel('$\langle \vec{S}_{\mathrm{imp}} \cdot \vec{S_{\mathrm{imp}}} \rangle$','Interpreter','latex','FontSize',25);
+
+            legend({'$\langle \vec{S}_{\mathrm{imp}} \cdot \vec{S_{\mathrm{imp}}} \rangle \mathrm{odd}$', '$\rangle \vec{S}_{imp} \cdot \vec{S_{m}} \rangle \mathrm{even}$', ...
+                            '$\langle \vec{S}_{\mathrm{imp}} \cdot \vec{S_{\mathrm{imp}}} \rangle \mathrm{average}$'},'Location','southeast','Interpreter','latex','FontSize',25);
+            title(['$\mathrm{ Spin-Spin \ Correlators} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
+                            sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+            hold off;
+        end
+
+        if chosen(9)
+
+            figure;
+            hold on;
+            
+            plot(X_odd,Sp_cum(1:2:end),'--','LineWidth',1.5);
+            plot(X_even,Sp_cum(2:2:end),'--','LineWidth',1.5);
+            plot(X(2:end-1),Sp_cum_avg,'-','LineWidth',1.5);
+    
+            xlim([X(end),X(1)]);
+            plot([X(end),X(1)],[-0.75,-0.75],'--','LineWidth',1,'color',[.7,.7,.7]);
+    
+            ax=gca;
+            ax.XAxis.FontSize = 20;
+            ax.YAxis.FontSize = 20;
+            set(gca,'XScale','log','YScale','linear','Xdir','reverse');
+            xlabel('$\Lambda^{-m/2} D$','Interpreter','latex','FontSize',25);
+            ylabel('$\langle \vec{S}_{\mathrm{imp}} \cdot \left( \sum_{i=1}^{m} \vec{S_{i}} \right) \rangle$','Interpreter','latex','FontSize',25);
+
+            set(gca, 'TickLabelInterpreter', 'latex');
+            ticks = {'-0.75','-0.6','-0.4','-0.2','0'};
+            yticklabels(ticks);
+            yticks([-0.75,-0.6,-0.4,-0.2,0]);
+
+            legend({'$\mathrm{odd}$', '$\mathrm{even}$', '$\mathrm{average}$'},'Location','best','Interpreter','latex','FontSize',25);
+            title(['$\mathrm{ Cumulated \ Spin-Spin \ Correlators} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
+                            sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+            hold off;
+        end
+
+    end
+
+    if avail(8)
+
+        Orb_corr = cell2mat(Orb_corr);
+        Orb_odd = Orb_corr(1:2:end);
+        Orb_even = Orb_corr(2:2:end);
+        Orb_avg = [];
+        Orb_cum = [];
+        Orb_cum_avg = [];
+
+        for it = (2:numel(Orb_corr)-1)
+            Orb_avg = [Orb_avg, (2*Orb_corr(it) + Orb_corr(it+1) + Orb_corr(it-1))/4];
+            %Orb_cum(it-1) = sum(Orb_avg(1:it-1));
+        end
+
+        for it = (1:numel(Orb_corr))
+            Orb_cum(it) = sum(Orb_corr(1:it));
+        end
+
+        for it = (2:numel(Orb_corr)-1)
+            Orb_cum_avg = [Orb_cum_avg, (2*Orb_cum(it) + Orb_cum(it+1) + Orb_cum(it-1))/4];
+        end
+
+        X = (1:numel(Orb_corr));
+        X_odd = (1:2:numel(Orb_corr));
+        X_even = (2:2:numel(Orb_corr));
+        X = 4.^(-X/2);
+        X_odd = 4.^(-X_odd/2);
+        X_even = 4.^(-X_even/2);
+
+        if chosen(8)
+
+            figure;
+            hold on;
+    
+            plot(X_odd,Orb_odd,'--','LineWidth',1.5);
+            plot(X_even,Orb_even,'--','LineWidth',1.5);
+            plot(X(2:end-1),Orb_avg,'-','LineWidth',1.5);
+    
+            xlim([X(end),X(1)]);
+            %xlim([1e-16,X(1)]);
+            plot([X(end),X(1)],[0,0],'--','LineWidth',1,'color',[.7,.7,.7]);
+    
+            ax=gca;
+            ax.XAxis.FontSize = 15;
+            ax.YAxis.FontSize = 15;
+            set(gca,'XScale','log','YScale','linear','Xdir','reverse');
+            xlabel('$\Lambda^{-m/2} D$','Interpreter','latex','FontSize',25);
+            ylabel('$< T_{\mathrm{imp}}^{z} T_{\mathrm{imp}}^{z} >$','Interpreter','latex','FontSize',25);
+            legend({'$\mathrm{odd}$', '$\mathrm{even}$', '$\mathrm{average}$'},'Location','best','Interpreter','latex','FontSize',25);
+            title(['$\mathrm{ Orbital-Orbital \ Correlators} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
+                            sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+            hold off;
+        end
+
+        if chosen(10)
+
+            figure;
+            hold on;
+            
+            plot(X_odd,Orb_cum(1:2:end),'--','LineWidth',1.5);
+            plot(X_even,Orb_cum(2:2:end),'--','LineWidth',1.5);
+            plot(X(2:end-1),Orb_cum_avg,'-','LineWidth',1.5);
+    
+            xlim([X(end),X(1)]);
+            %xlim([1e-10,X(1)]);
+            %ylim([-0.26,0.01]);
+            ylim([-0.25,0.01]);
+            %plot([X(end),X(1)],[-0.25,-0.25],'--','LineWidth',1,'color',[.7,.7,.7]);
+            plot([X(end),X(1)],[0,0],'--','LineWidth',1,'color',[.7,.7,.7]);
+    
+            ax=gca;
+            ax.XAxis.FontSize = 25;
+            ax.YAxis.FontSize = 25;
+            %set(gca,'XScale','linear','YScale','linear');
+            set(gca,'XScale','log','YScale','linear','Xdir','reverse');
+            xlabel('$\Lambda^{-m/2} D$','Interpreter','latex','FontSize',25);
+            ylabel('$\langle T_{\mathrm{imp}} \left( \sum_{i=1}^{m} T_{i} \right) \rangle$','Interpreter','latex','FontSize',25);
+
+            set(gca, 'TickLabelInterpreter', 'latex');
+            %{}
+            ticks = {'-0.25','-0.2','-0.1','0'};
+            yticklabels(ticks);
+            yticks([-0.25,-0.2,-0.1,0]);
+            %}
+
+            legend({'$\mathrm{odd}$', '$\mathrm{even}$', '$\mathrm{average}$'},'Location','best','Interpreter','latex','FontSize',25);
+            title(['$\mathrm{ Cumulated \ Orbz-Orbz \ Correlators} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
+                            sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+            hold off;
+        end
+    end
+
 
 else    % LineSearch
 

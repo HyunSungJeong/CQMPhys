@@ -117,7 +117,7 @@ function [Maxima, MaxIdx, MaxPos] = LocMax(x,y,varargin)
     MaxPos = zeros(numel(near_locmax), 1);
     
     for it = (1:numel(near_locmax))
-	    [tmp1, tmp2] = max(y(near_locmax(it)-gloMinRange : near_locmax(it)+gloMinRange));
+	    [tmp1, tmp2] = max(y( max(near_locmax(it)-gloMinRange,1) : near_locmax(it)+gloMinRange));
 	    Maxima(it) = tmp1;
         MaxIdx(it) = near_locmax(it) - gloMinRange + tmp2 - 1;
 	    MaxPos(it) = x(MaxIdx(it));
