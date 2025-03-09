@@ -129,19 +129,22 @@ function Quartic_NRG(parfn,varargin)
         save([STG,'/Etot.mat'],'Etot');
         save([STG,'/Qtot.mat'],'Qtot');
 
-        Orb_z_exp = getEpVal(nrgdata{1}, [T_z, J_orb_z]);    % thermal expectation values
-        disp2(['Thermal expectation value of T_z: ',sprintf('%.3g',Orb_z_exp(1))]);
-        disp2(['Thermal expectation value of J_orb_z: ',sprintf('%.3g',Orb_z_exp(2))]);
+        T_z_exp = getEpVal(nrgdata{1}, T_z);    % thermal expectation values
+        J_orb_z_exp = getEpVal(nrgdata{1}, J_orb_z);
+        disp2(['Thermal expectation value of T_z: ',sprintf('%.3g',T_z_exp)]);
+        disp2(['Thermal expectation value of J_orb_z: ',sprintf('%.3g',J_orb_z_exp)]);
+        save([STG,'/T_z_exp.mat'],'T_z_exp');
+        save([STG,'/J_orb_z_exp.mat'],'J_orb_z_exp');
 
         % operators that define the two-point correlators
-        Ops1 = [T_z-T_z_exp; J_sp(1); J_sp(2); J_sp_tot; J_orb_z-J_orb_z_exp];    % TODO: J_orb_plus/sqrt(2)];
+        Ops1 = [Fs(1), Fs(2), T_z-T_z_exp; J_sp(1); J_sp(2); J_sp_tot; J_orb_z-J_orb_z_exp];    % TODO: J_orb_plus/sqrt(2)];
         Ops2 = Ops1;
-        OpNames = {'ImpOrb_z', 'BathSp1', 'BathSp2', 'BathSptot', 'BathOrb_z'};     % , 'BathOrb_plus'};
+        OpNames = {'BathCh1','BathCh2','ImpOrb_z', 'BathSp1', 'BathSp2', 'BathSptot', 'BathOrb_z'};     % , 'BathOrb_plus'};
 
         % zflag and cflag are options in getAdisc(fdmNRG calc. of the spectral func. of the correlation function)
         % zflag: to use(1) or not to use(0) fermionic sign change for each operator.
         % 1 for fermionic operators, 0 for bosonic operators (e.g. if Ops1 = [fermionic, bosonic], zflag = [1,0]
-        zflag = zeros(1,numel(Ops1));     
+        zflag = [1, 1, zeros(1,numel(Ops1)-2)];     
         % cflag: sign factors for each commutator(+ for fermionic, - for bosonic operators)
         % corresponds to the purple sign factor in lecture note 16.2 of tensor networks course
         cflag = (zflag-0.5)*2;

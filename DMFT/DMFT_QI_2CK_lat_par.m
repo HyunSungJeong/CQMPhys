@@ -16,12 +16,12 @@ function DMFT_QI_2CK_lat_par (varargin)
     num_jobs = input('>>> ');
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    h_vmem = 300;           % Memory (in GB) to be occupied in clusters
-    PE = 24;                % # of cores to be occupied in clusters
-    Nkeep = 2001;
+    h_vmem = 250;           % Memory (in GB) to be occupied in clusters
+    PE = 20;                % # of cores to be occupied in clusters
+    Nkeep = 3000;
     Lambda = 4;
     sigmarat = 1.5;
-    nz = 2;
+    nz = 1;
     emax = 1e3;         % Maximum absolute value of frequency grid
     estep = 250;        % # of steps to increase frequency per decade(x10), used in getAdisc and getAcont
     ndfix = zeros(1, num_jobs);       % target filling

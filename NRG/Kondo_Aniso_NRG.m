@@ -4,9 +4,9 @@ function Kondo_Aniso_NRG(parfn,varargin)
 
     partot = job_func_preamble(parfn, varargin{:});
   
-    [PE, Nkeep, J_perp, J_z, T, JobName, nz] = loadvar(partot, ...
-      {'PE', 'Nkeep', 'J_perp', 'J_z', 'T', 'JobName', 'nz'}, ...
-        {[], [], [], [], [], [], []});
+    [PE, Nkeep, J_perp, J_z, T, h, JobName, nz] = loadvar(partot, ...
+      {'PE', 'Nkeep', 'J_perp', 'J_z', 'T', 'h', 'JobName', 'nz'}, ...
+        {[], [], [], [], [], [], [], []});
   
     %num_threads_SL(8);
     
@@ -63,6 +63,7 @@ function Kondo_Aniso_NRG(parfn,varargin)
     H0 = (J_perp/2)*contract(A0,'!2*',{J_sp_plus,'!2*',{S_plus,A0}});       % spin-spin exchange interaction
     H0 = H0 + (J_perp/2)*contract(A0,'!2*',{J_sp_minus,'!2*',{S_minus,A0}});
     H0 = H0 + J_z*contract(A0,'!2*',{J_sp_z,'!2*',{S_z,A0}});
+    H0 = H0 + h*contract(A0,'!2*',{S_z,A0});
 
     H0 = H0 + 1e-40*contract(A0,'!2*',A0);
   

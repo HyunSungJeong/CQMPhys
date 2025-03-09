@@ -16,20 +16,23 @@ function Kondo_Aniso_par (varargin)
     num_jobs = input('>>> ');
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    h_vmem = 120;           % Memory (in GB) to be occupied in clusters
-    PE = 12;                 % # of cores to be occupied in clusters
+    h_vmem = 95;            % Memory (in GB) to be occupied in clusters
+    PE = 10;                % # of cores to be occupied in clusters
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
     Nkeep = 3000;
     nz = ones(1,num_jobs);
     J_perp = zeros(1,num_jobs);
     J_z = zeros(1,num_jobs);
     T = zeros(1,num_jobs);
+    h = zeros(1,num_jobs);
+    %h = 0:0.1:1;
     
     for it = (1:num_jobs)
   
       partot(it).nz = nz(it);
       partot(it).PE = PE;
       partot(it).Nkeep = Nkeep;
+      partot(it).h = h(it);
       
       fprintf(['J_perp for job #',sprintf('%d',it),'\n']);
       intmp = input('>>> ');
@@ -57,9 +60,16 @@ function Kondo_Aniso_par (varargin)
         end
       end
   
-      JobName = ['J_perp=',sprintf('%.15g',partot(it).J_perp), ...
-                  '_J_z=',sprintf('%.15g',partot(it).J_z), ...
-                    '_T=',sprintf('%.15g',partot(it).T)];     
+      if h(it) == 0
+        JobName = ['J_perp=',sprintf('%.15g',partot(it).J_perp), ...
+                    '_J_z=',sprintf('%.15g',partot(it).J_z), ...
+                      '_T=',sprintf('%.15g',partot(it).T)];
+      else
+        JobName = ['J_perp=',sprintf('%.15g',partot(it).J_perp), ...
+                    '_J_z=',sprintf('%.15g',partot(it).J_z), ...
+                      '_T=',sprintf('%.15g',partot(it).T), ...
+                        '_h=',sprintf('%.15g',partot(it).h)];
+      end     
   
       partot(it).JobName = JobName;
   
@@ -94,8 +104,20 @@ function Kondo_Aniso_par (varargin)
       Ts = cell2mat(Ts);
       Ts = ['[',Ts(1:end-1),']'];
     end
+
+    if all(h == h(end)) && num_jobs ~= 1
+      hs = ['[',sprintf('%.15g',h(end)),']x',sprintf('%d',num_jobs)];
+    else
+      hs = cellfun(@(x) [sprintf('%.15g',partot(x).h),','],num2cell(1:num_jobs),'UniformOutput',false);
+      hs = cell2mat(hs);
+      hs = ['[',hs(1:end-1),']'];
+    end
   
-    parfn = ['Kondo_Aniso_par_J_perp=',J_perps,'_J_z=',J_zs,'_T=',Ts];
+    if all(h == 0)
+      parfn = ['Kondo_Aniso_par_J_perp=',J_perps,'_J_z=',J_zs,'_T=',Ts];
+    else
+      parfn = ['Kondo_Aniso_par_J_perp=',J_perps,'_J_z=',J_zs,'_T=',Ts,'_h=',hs];
+    end
   
     dispstruct(partot);
     parfn = [go('mu/Para/'), parfn, '.mat'];
