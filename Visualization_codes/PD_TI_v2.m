@@ -86,6 +86,7 @@ function PD_TI_v2
         
     figure;
     hold on;
+    set(gcf,'position',[0,0,800,1000])
 
     ylim(yl);
     xlim([-1,1]);
@@ -107,7 +108,7 @@ function PD_TI_v2
                             power(10, (log(yl(2))/log(10)-A3(2))/A3(1)), Intsec(1,2), Intsec(1,1)];
     Unscreened_Y = [Intsec(2,1), yl(2), yl(2), Intsec(2,2), Intsec(2,1)];
 
-    [axes, lin2sym_X, sym2lin_X] = SLplot(X1, Y1, 'YScale', 'log', 'XexpLim', [log(xl(1))/log(10), log(xl(2))/log(10)], 'xzerowidth', Xzerowidth);
+    [axes, lin2sym_X, sym2lin_X] = SLplot(X1, Y1, 'XScale', 'symlog', 'YScale', 'log', 'XexpLim', [log(xl(1))/log(10), log(xl(2))/log(10)], 'xzerowidth', Xzerowidth);
 
 
     NFL1_X = lin2sym_X(NFL1_X);
@@ -118,19 +119,19 @@ function PD_TI_v2
     FL1_X = [-1,-1,FL1_X(3:5),-1];
     FL2_X = [1,1,FL2_X(3:5),1];
 
-    axes.XAxis.FontSize = 11;
-    axes.YAxis.FontSize = 11;
+    axes.XAxis.FontSize = 15;
+    axes.YAxis.FontSize = 15;
     axes.XAxis.MinorTick = 'on';
     axes.Layer = 'top';
     title('$J_{0} = 0.1, K_{0} = 0.3$', 'interpreter', 'latex', 'fontsize', 21);
-    xlabel(axes,'$I_{0}$', 'interpreter', 'latex', 'fontsize', 16);
-    ylabel(axes,'$\mathrm{T}$', 'interpreter', 'latex', 'fontsize', 16);
+    xlabel(axes,'$I_{0}$', 'interpreter', 'latex', 'fontsize', 25);
+    ylabel(axes,'$\mathrm{T}$', 'interpreter', 'latex', 'fontsize', 25);
         
-    NFL1_h = patch(NFL1_X, NFL1_Y, [.996,.734,.2], 'FaceAlpha', 0.7, 'linestyle', 'none');
-    FL_h = patch(FL1_X, FL1_Y, [0,0.9,0.05], 'FaceAlpha', 0.7, 'linestyle', 'none');
-    patch(FL2_X, FL2_Y, [0,0.9,0.05], 'FaceAlpha', 0.7, 'linestyle', 'none');
-    Unscreened_h = patch(Unscreened_X, Unscreened_Y, [.294,.537,.863], 'FaceAlpha', 0.7, 'linestyle', 'none');
-    NFL2_h = patch(NFL2_X,NFL2_Y, [.235 .000 .392], 'FaceAlpha', 0.5, 'linestyle', 'none');
+    NFL1_h = patch(NFL1_X, NFL1_Y, [.737,.890,.996], 'FaceAlpha', 1, 'linestyle', 'none');
+    FL_h = patch(FL1_X, FL1_Y, [.753,.878,.753], 'FaceAlpha', 1, 'linestyle', 'none');
+    patch(FL2_X, FL2_Y, [.753,.878,.753], 'FaceAlpha', 1, 'linestyle', 'none');
+    Unscreened_h = patch(Unscreened_X, Unscreened_Y, [.686,.694,.698], 'FaceAlpha', 1, 'linestyle', 'none');
+    NFL2_h = patch(NFL2_X,NFL2_Y, [.745 .682 .898], 'FaceAlpha', 1, 'linestyle', 'none');
 
     patch([-Xzerowidth*[1,1], -XzeroRatio*Xzerowidth*[1,1], -Xzerowidth], ...
             [yl(1), yl(2)*[1,1], yl(1)*[1,1]], [.5,.5,.5], 'FaceAlpha', 0.5, 'linestyle', 'none');
@@ -166,6 +167,6 @@ function PD_TI_v2
         
     hold off;
 
-    saveas(gcf,fullfile('/home/hyunsung/MyWork/Figures','Red_Mag_Phase_Diagram_TI_J0=0.1_K0=0.3_v2.png'),'png');
+    saveas(gcf,fullfile('C:\Users\82104\Documents\Physics\Research\Figures','Red_Mag_Phase_Diagram_TI_J0=0.1_K0=0.3_v2.png'),'png');
 
 end
