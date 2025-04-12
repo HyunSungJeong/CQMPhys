@@ -1,4 +1,4 @@
-function Quartic_NRG(parfn,varargin)
+function Anderson_4flav_NRG(parfn,varargin)
 
     try % in case of bug
 
@@ -6,9 +6,9 @@ function Quartic_NRG(parfn,varargin)
 
         partot = job_func_preamble(parfn, varargin{:});
     
-        [PE, Nkeep, K_z, Q, T, JobName, nz] = loadvar(partot, ...
-            {'PE', 'Nkeep', 'K_z', 'Q', 'T', 'JobName', 'nz'}, ...
-                {[], [], [], [], [], [], []});
+        [PE, Nkeep, U, J, mu, T, JobName, nz] = loadvar(partot, ...
+            {'PE', 'Nkeep', 'U', 'J', 'mu', 'T', 'JobName', 'nz'}, ...
+                {[], [], [], [], [], [], [], []});
     
         %num_threads_SL(8);
         
@@ -79,23 +79,9 @@ function Quartic_NRG(parfn,varargin)
         J_orb_z = (1/2)*( contract(Fs(1),'!2*',Fs(1),'!2') - contract(Fs(2),'!2*',Fs(2),'!2') );    % orbital-z operator
     
         %% project to the GS subspace to obtain impurity local operators
-        % spin operators are zero in the GS(impurity) subspace
-        % +- orbital pseudospin operators are zero in the GS(impurity) subspace
 
-        Gsub = all(Zs.Q{1}(:,1) == -1, 2) & all(Zs.Q{1}(:,2) == 1, 2);
-        Gsub = Gsub | all(Zs.Q{1}(:,1) == 1, 2) & all(Zs.Q{1}(:,2) == -1, 2);
-        Z_imp = getsub(Zs, find(Gsub));         % fermionic sign operators at the impurity site
-
-        Gsub = all(Es.Q{1}(:,1) == -1, 2) & all(Es.Q{1}(:,2) == 1, 2);
-        Gsub = Gsub | all(Es.Q{1}(:,1) == 1, 2) & all(Es.Q{1}(:,2) == -1, 2);
-        E_imp = getsub(Es, find(Gsub));                   % identity at the impurity site
-
-        Gsub = all(J_orb_z.Q{1}(:,1) == -1, 2) & all(J_orb_z.Q{1}(:,2) == 1, 2);
-        Gsub = Gsub | all(J_orb_z.Q{1}(:,1) == 1, 2) & all(J_orb_z.Q{1}(:,2) == -1, 2);
-        T_z = getsub(J_orb_z, find(Gsub));      % orbital-z operator at the impurity site
-    
-        [Z_imp, E_imp, T_z] = setItag('L00','op',Z_imp, E_imp, T_z);
-
+        [Z_imp, E_imp, T_z] = setItag('L00','op',Zs, Es, J_orb_z);
+        
         %% Quartic operators
         CC = QSpace(1,2);
         for it = 1:2
