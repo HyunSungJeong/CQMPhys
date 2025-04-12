@@ -60,7 +60,7 @@ if intmp == 1       % TsoK_NRG
     for it = (1:numel(FileInfo))
         DirName = FileInfo(it).name;
         if DirName(1) == 'J' || DirName(1) == 'T'
-            strtmp = cat(2,strtmp,[sprintf('%.15g',cnt),': ',DirName]);
+            strtmp = cat(2,strtmp,[sprintf('%.15gc;',cnt),': ',DirName]);
             cnt = cnt + 1;
         end
     end
@@ -288,6 +288,7 @@ if intmp == 1       % TsoK_NRG
             ax.XAxis.FontSize = 5;
             ax.YAxis.FontSize = 5;
             legend(legends,'Location','best','FontSize',25);
+
             %{
             xlim([1e-25, 1]);
             ylim([1e-5, 1e8]);
@@ -342,7 +343,7 @@ if intmp == 1       % TsoK_NRG
             %{}
             legend('AutoUpdate','off');
             %fit_range = [-2, -3; -13, -18; -13, -18];
-            fit_range = [-8, -13; -13, -18; -13, -18];
+            fit_range = [-14, -19; -13, -18; -13, -18];
             %fit_range = [-15, -20; -16, -18; -16, -18];
            
             log_ImpDyn = cat(1,log_ImpDyn,log_ImpDyn{1});
@@ -351,7 +352,7 @@ if intmp == 1       % TsoK_NRG
 
             x1 = fit_range(1,:);
             text_x = (x1(1)+x1(2))/2;
-            text_y = polyval(a1,text_x) + 1;
+            text_y = polyval(a1,text_x) + 2;
             text_x = power(10, text_x);
             text_y = power(10, text_y);
             y1 = polyval(a1,x1)+0.5;
@@ -390,7 +391,6 @@ if intmp == 1       % TsoK_NRG
 
             log_ImpDyn(3) = [];
             %}
-
 
             set(gca,'XScale','log','YScale','log','fontsize',20);
             xlabel('$\omega$','Interpreter','latex','FontSize',25);
@@ -807,11 +807,14 @@ elseif intmp == 2   % TsoK_Aniso_NRG
     end
 
     if avail(1) && chosen(1)
+        %{
         plotE(Eflow{1}, Eflow{2}, 'title', '$ \mathrm{ RGflow: \ U(1)_{c1} \times U(1)_{c2} \times SU(2)_{sp}} $', 'FontSize', 15, ...
                                                 'Emax',1.3,'legmax',8,'Qdiff',[0,0,0]);
-        %{
+        %}
+
+        %{}
         plotE(Eflow{1}, Eflow{2}, 'title', ['$J_{0}=',sprintf('%.15g',J0),'\, K_{\perp}=',sprintf('%.15g',K_perp),'\, K_{z}=',sprintf('%.15g',K_z),'\, I_{0}=',sprintf('%.15g',I0),'$'], ...
-                                                'Emax',3,'legmax',13,'Qdiff',[0,0,0]);
+                                                'Emax',1.3,'legmax',8,'Qdiff',[0,0,0]);
         %}
     end
 
@@ -851,14 +854,22 @@ elseif intmp == 2   % TsoK_Aniso_NRG
 
         if chosen(2)
 
+            %%%%%
+            %{}
             figure;
             
             hold on;
+            %}
+            %%%%%
+            legend('AutoUpdate','off');
             linestyle = {'-', '-', '-'};
+            color = {[0, .4470, .7410], [.8500 .3250 .0980], [.9290 .6940 .1250]};
             for it = (1:num_ImpDyn)
-                plot(ocont(ocont<1), ImpDyn{it}(ocont<1), 'LineWidth',2,'LineStyle',linestyle{it});
+                plot(ocont(ocont<1), ImpDyn{it}(ocont<1), 'LineWidth',2,'LineStyle',linestyle{it},'color',color{it});
             end
             
+            %%%%
+            %{}
             ax = gca;
             ax.XAxis.FontSize = 5;
             ax.YAxis.FontSize = 5;
@@ -872,6 +883,9 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
                         sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
             %}
+
+            %}
+            %%%%%
 
             %{}
             legend('AutoUpdate','off');
@@ -915,7 +929,8 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             text(text_x, text_y, text3,'Interpreter','latex','FontSize',20);
             legend('AutoUpdate','on');
             %}
-
+            
+            %%%%%
             hold off;
         end
 
@@ -1853,8 +1868,8 @@ elseif intmp == 4       %% Kondo_Aniso_NRG
             %{}
             legend('AutoUpdate','off');
             log_ImpDyn = cat(1,log_ImpDyn,log_ImpDyn(1));
-            fit_range = [-13, -15; -13, -15; 0, 0];
-            %fit_range = [-7, -12; -7, -12; 0, 0];
+            %fit_range = [-13, -15; -13, -15; 0, 0];
+            fit_range = [-7, -12; -7, -12; 0, 0];
             [a1,Rsq1,a2,Rsq2,a3,Rsq3] = Insert(log_T, log_ImpDyn,fit_range);
 
             x1 = fit_range(1,:);
@@ -1890,7 +1905,7 @@ elseif intmp == 4       %% Kondo_Aniso_NRG
             log_ImpDyn(3) = [];
             %}
 
-            %{}
+            %{
             legend('AutoUpdate','off');
             log_ImpDyn = cat(1,log_ImpDyn,log_ImpDyn(1));
             %fit_range = [-14.5, -16; -14.5, -16; 0, 0];

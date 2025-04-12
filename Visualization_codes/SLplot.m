@@ -385,8 +385,8 @@ function [axes, varargout] = SLplot(X, Y, varargin)
 
         sign_Y = '';
 
-        minExp_arr = zeros(numel(X), 1);
-        maxExp_arr = zeros(numel(X), 1);
+        minExp_arr = zeros(numel(Y), 1);
+        maxExp_arr = zeros(numel(Y), 1);
 
         for it = (1:numel(Y))
 

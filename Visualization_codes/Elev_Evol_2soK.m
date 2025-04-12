@@ -1,4 +1,17 @@
 function Elev_Evol_2soK(J0, K_perp, N, N_elev, Nshow)
+    % <Description>
+    % Plots (rescaled) energy levels of at a certain NRG iteration in the orbital-anisotropic 2-channel spin-orbital Kondo(2soK) model 
+    % as a function of K_{z} at fixed K_{\perp}, J_{0}, and I_{\perp} = I_{z} = 0
+    %
+    % <Input>
+    % N : the iteration step to analyze
+    % N_elev : the number of lowest energy levels to be shown in the plot
+    % Nshow : the number of lowest energy quantum number labels
+    %
+    % <Output>
+    % Plot of the (rescaled) energy levels of the N-th NRG iteration in the Quartic-Kondo model 
+    % as a function of K_{z} at fixed K_{\perp}, J_{0}, and I_{\perp} = I_{z} = 0
+
     if ~ismember(N_elev, 1:N)
         error('ERR: N_elev must be a natural number that does not exceed N')
     end

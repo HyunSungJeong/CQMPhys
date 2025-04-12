@@ -6,7 +6,7 @@ function [Maxima, MaxIdx, MaxPos] = LocMax(x,y,varargin)
     % local minima search tuned by 
     % 'sparseness', 'minpeak', 'maxsharpness','gloMinRange'
     % 
-    % The function finds "reasonable" local minima according to the following steps :
+    % The function finds "reasonable" local maxima according to the following steps :
     %
     % 1. The function 'sparsifies' the input data by extracting data points in
     %   interval of 'sparseness'(Default: 10).

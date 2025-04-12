@@ -53,8 +53,27 @@ function Elev_Evol(N, N_elev, Nshow)
 
     linestyles = {'--', '-', ':', '-.'};
     
+    K_z = 0:0.1:1;
+    Q = 0.01*ones(numel(K_z));
+    %{
     K_z = [0.1:0.1:0.5, 0.51:0.01:0.59, 0.6:0.1:1];
+    K_z = K_z(1:7);
     Q = 0.1*ones(numel(K_z));
+    Lbd_z_fix = [0.05236, 0.1029, 0.1539, 0.2057, 0.2642, 0.2725, 0.2849];
+    %}
+    %{
+    K_z = [0.1:0.1:0.4, 0.41:0.01:0.49, 0.5:0.1:1];
+    K_z = K_z(1:9);
+    Q = 0.2*ones(numel(K_z));
+    Lbd_z_fix = [0.05948, 0.1119, 0.1660, 0.2262, 0.2333, 0.2407, 0.2487, 0.2585, 0.2701];
+    %}
+    %{
+    K_z = [0.1:0.1:0.4, 0.41:0.01:0.49, 0.5:0.1:1];
+    K_z = K_z(1:3);
+    Q = 0.3*ones(numel(K_z));
+    Lbd_z_fix = [0.07201, 0.1277, 0.1890];
+    %}
+
     %K_z = 0.1:0.1:1;
     %Q = zeros(1,10);
     Elev_ev = cell(1,numel(K_z));
@@ -141,6 +160,7 @@ function Elev_Evol(N, N_elev, Nshow)
     for it = 1:size(Qnum_groups,1)
 
         plot(Qnum_gp_data{it}(:,1)/2, Qnum_gp_data{it}(:,2), linestyles{rem(it,4)+1}, 'linewidth', 1.5, 'Color', Qnum_gp_colors{it});
+        %plot(Lbd_z_fix, Qnum_gp_data{it}(1:3,2), linestyles{rem(it,4)+1}, 'linewidth', 1.5, 'Color', Qnum_gp_colors{it});
         %{
         if isequal(Qnum_groups(it,:), [-2, 1, 1, 0, 1])
             plot(Qnum_gp_data{it}(:,1)/2, Qnum_gp_data{it}(:,2), linestyles{rem(it,4)+1}, 'linewidth', 1.5, 'Color', Qnum_gp_colors{it});
@@ -151,7 +171,7 @@ function Elev_Evol(N, N_elev, Nshow)
     xlabel('$\lambda_{z}$','Interpreter','latex','FontSize',25);
     ylabel('$\mathrm{Rescaled \ energy}$','Interpreter','latex','FontSize',25);
     legend(legends,'Location','eastoutside','FontSize',15, 'Box', 'off');
-    title('$\mathrm{Lowest \ Energy \ Levels} \left( \lambda_{x} = 0.1 \right)$', 'Interpreter', 'latex', 'FontSize', 30);
+    title('$\mathrm{Lowest \ Energy \ Levels} \left( \lambda_{x} = 0.01 \right)$', 'Interpreter', 'latex', 'FontSize', 30);
     
     hold off;
 
