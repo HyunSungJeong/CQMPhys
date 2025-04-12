@@ -17,7 +17,7 @@ function DMFT_QI_2CK_lat_par (varargin)
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
     h_vmem = 250;           % Memory (in GB) to be occupied in clusters
-    PE = 20;                % # of cores to be occupied in clusters
+    PE = 28;                % # of cores to be occupied in clusters
     Nkeep = 3000;
     Lambda = 4;
     sigmarat = 1.5;
@@ -87,17 +87,28 @@ function DMFT_QI_2CK_lat_par (varargin)
 
       ocont = getAcont(0, 0, 0, 0, 'emin', emin, 'emax', emax, 'estep', estep);   % logarithmic frequency grid
       initSE = cell(1,2);                   % initial self-energy, even & odd
-      initSE{1} = zeros(numel(ocont),3,3);  % initial self-energy, even sector
-      initSE{2} = zeros(numel(ocont),2,2);  % initial self-energy, odd sector
+      initSE{1} =-0.1i*zeros(numel(ocont),3,3);  % initial self-energy, even sector
+      initSE{2} = -0.1i*zeros(numel(ocont),2,2);  % initial self-energy, odd sector
       partot(it).initSE = initSE;
 
-  
+      %{}
       JobName = ['U=',sprintf('%.15g',partot(it).U), ...
                 '_V=',sprintf('%.15g',partot(it).V), ...
                   '_t_0=',sprintf('%.15g',partot(it).t_0), ...
                     '_phi_div_pi=',sprintf('%.15g',partot(it).phi_div_pi), ...
                       '_T=',sprintf('%.15g',partot(it).T), ...
-                        '_ndfix=',sprintf('%.15g',partot(it).ndfix)];     
+                        '_ndfix=',sprintf('%.15g',partot(it).ndfix)];  
+      %}
+  
+      %{
+      JobName = ['U=',sprintf('%.15g',partot(it).U), ...
+                '_V=',sprintf('%.15g',partot(it).V), ...
+                  '_t_0=',sprintf('%.15g',partot(it).t_0), ...
+                    '_phi_div_pi=',sprintf('%.15g',partot(it).phi_div_pi), ...
+                      '_T=',sprintf('%.15g',partot(it).T), ...
+                        '_ndfix=',sprintf('%.15g',partot(it).ndfix), ...
+                          '_Nfit=27'];     
+      %}
   
       partot(it).JobName = JobName;
   
@@ -158,6 +169,7 @@ function DMFT_QI_2CK_lat_par (varargin)
     end
   
     parfn = ['DMFT_QI_par_U=',Us,'_V=',Vs,'_t_0=',t_0s,'_pdp=',phi_div_pis,'_T=',Ts,'_nu=',ndfixs];
+    %parfn = ['DMFT_QI_par_U=',Us,'_V=',Vs,'_t_0=',t_0s,'_pdp=',phi_div_pis,'_T=',Ts,'_nu=',ndfixs,'_Nfit=[27]x2'];
   
     dispstruct(partot);
     parfn = [go('mu/Para/'), parfn, '.mat'];

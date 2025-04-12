@@ -22,9 +22,9 @@ function DMFT_QI_2CK_lat(parfn,varargin)
         
         %% NRG parameters
         % Lambda
-        N = max(ceil(-2*log(T/500)/log(Lambda))+10,20);  % Wilson chain length
-        %Nfit = round(-2*log(1e-8)/log(Lambda));         % The Wilson chain site index after which the Wilson chain parameters are obtained via extrapolation
-        Nfit = round(-2*log(1e-12)/log(Lambda));         % The Wilson chain site index after which the Wilson chain parameters are obtained via extrapolation
+        N = max(ceil(-2*log(T/100)/log(Lambda))+4,5);   % Wilson chain length
+        Nfit = round(-2*log(1e-6)/log(Lambda));         % The Wilson chain site index after which the Wilson chain parameters are obtained via extrapolation
+        %Nfit = round(-2*log(1e-12)/log(Lambda));       % The Wilson chain site index after which the Wilson chain parameters are obtained via extrapolation
         % nz = 2 : Number of z's to be averaged
         % emin = T : Minimum absolute value of frequency grid
         % emax = 1e3 : Maximum absolute value of frequency grid
@@ -220,14 +220,14 @@ function DMFT_QI_2CK_lat(parfn,varargin)
                     0,0,12,0,13];
 
             [ocont,SE_tot,nrgdataz] = impSE(Hmu,HU,A0,FF_s_eo,ZF_s_eo,RVres,T,Lambda,nz,Nkeep,nrgdata,'F_L00',FF_L_eo,'Z_L00',ZF_L_eo,'Gdep',Gdep,'Fdep',Fdep, ...
-                                            'doZLD',{'Nfit',Nfit},'NRG_SL',{'Etrunc', Etrunc, 'ETRUNC', ETRUNC},'getRhoFDM',{'Rdiag', true}, ...
+                                            'doZLD',{'Nfit',Nfit},'NRG_SL',{'Etrunc', Etrunc, 'ETRUNC', ETRUNC,'deps',1e-10},'getRhoFDM',{'Rdiag', true}, ...
                                                 'getAdisc',{'emin', emin, 'emax', emax, 'estep', 2*estep}, ...
                                                     'getAcont',{'alphaz', sigmarat / nz, 'smin', log(Lambda) / 15, 'emin', emin, 'emax', emax, 'estep', estep}, ...
                                                         'SEtrick',{});
 
             disp2(reshape(max(abs(SE_tot),[],1), [5,5]));
-            SE_e = SE_tot(:,[1,4,5],[1,4,5]);
-            SE_o = SE_tot(:,2:3,2:3);
+            SE_e = SE_tot(:,[4,1,2],[4,1,2]);   % self-energy for the even sector [1e,2e,3]
+            SE_o = SE_tot(:,[5,3],[5,3]);       % self-energy for the odd sector [1o,2o]
             SE_save_e(:,:,:,itD) = SE_e;
             SE_save_o(:,:,:,itD) = SE_o;
             save([STG,'/ocont.mat'], 'ocont');          % save the logarithmic frequency grid
@@ -294,6 +294,34 @@ function DMFT_QI_2CK_lat(parfn,varargin)
                 mures(itD + 1) = mutmp;          % Store chemical potential of itD+1 iteration
                 RhoV2in(:, :, itD + 1) = RVres;  % Store hyb ftn. for itD+1 iteration
             elseif iscvg
+
+                SE_save_e = SE_save_e(:,:,:,1:itD);
+                SE_save_o = SE_save_o(:,:,:,1:itD);
+                nures = nures(:,1:itD);
+                ffs = ffs(1:itD);
+                ggs = ggs(1:itD);
+                dffs = dffs(1:itD);
+                dggs = dggs(1:itD);
+                Etots = Etots(1:itD);
+                Qtots = Qtots(1:itD);
+                Qdiffs = Qdiffs(1:itD);
+                RhoV2in = RhoV2in(:,:,itD);
+                RhoV2out = RhoV2out(:,:,itD);
+
+                save([STG,'/SE_even.mat'], 'SE_save_e');
+                save([STG,'/SE_odd.mat'], 'SE_save_o');
+                save([STG,'/nures.mat'], 'nures');
+                save([STG,'/ffs.mat'], 'ffs');
+                save([STG,'/ggs.mat'], 'ggs');
+                save([STG,'/dffs.mat'], 'dffs');
+                save([STG,'/dggs.mat'], 'dggs');
+                save([STG,'/Etots.mat'], 'Etots');
+                save([STG,'/Qtots.mat'], 'Qtots');
+                save([STG,'/Qdiffs.mat'], 'Qdiffs');
+                save([STG,'/RhoV2in.mat'], 'RhoV2in');
+                save([STG,'/RhoV2out.mat'], 'RhoV2out');
+
+                
                 dispbox('DMFT converged.');
                 break;
             end
