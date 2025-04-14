@@ -3,7 +3,7 @@ function Elev_labeled = Elev_label(Etot, Qtot, N, N_elev)
     % <Input>
     % Etot: energy level data from the output of 'plotE' function
     % Qtot: quantum number data from the output of 'plotE' function
-    % N : the iteration step to analyze
+    % N : the iteration step to analyze (counting from 0)
     % N_elev : the number of lowest energy levels to be shown with their quantum numbers
     %
     % <Output>
@@ -12,8 +12,10 @@ function Elev_labeled = Elev_label(Etot, Qtot, N, N_elev)
     %               the 1st cell is the lowest energy levels in increasing order,
     %               and the 2nd cell is the quantum numbers for each energy levels
 
+    N = N+1;
+    
     if ~ismember(N, 1:numel(Etot))
-        error('ERR: N must be a natural number that does not exceed Eshow');
+        error('ERR: N must be a nonnegative integer that does not exceed Wilson chain length');
     end
 
     Elevs = [];

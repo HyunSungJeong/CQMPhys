@@ -1,19 +1,19 @@
 % code to plot from calculated data
 % type the following command to WSL terminal to syncronize data with SNU server
 % (To sync TsoK data)
-% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/TsoK /mnt/c/Users/82104/Documents/Physics/Research/data
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/TsoK /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync TsoK_Aniso data)
-% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/TsoK_Aniso /mnt/c/Users/82104/Documents/Physics/Research/data
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/TsoK_Aniso /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync TCK_Aniso data)
-% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/TCK_Aniso /mnt/c/Users/82104/Documents/Physics/Research/data
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/TCK_Aniso /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync Kondo_Aniso data)
-% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/Kondo_Aniso /mnt/c/Users/82104/Documents/Physics/Research/data
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/Kondo_Aniso /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync ThsoK data)
-% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/ThsoK /mnt/c/Users/82104/Documents/Physics/Research/data
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/ThsoK /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync Quartic data)
-% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/Quartic /mnt/c/Users/82104/Documents/Physics/Research/data
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/Quartic /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync LineSearch data)
-% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/LineSearch /mnt/c/Users/82104/Documents/Physics/Research/data
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/LineSearch /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 
 %clear;
 %% Choose Calculation Type
@@ -32,19 +32,19 @@ path = [];
 
 while isempty(path)
     if intmp == 1
-        path = 'C:\Users\82104\Documents\Physics\Research\data\TsoK';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\TsoK';
     elseif intmp == 2
-        path = 'C:\Users\82104\Documents\Physics\Research\data\TsoK_Aniso';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\TsoK_Aniso';
     elseif intmp == 3
-        path = 'C:\Users\82104\Documents\Physics\Research\data\TCK_Aniso';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\TCK_Aniso';
     elseif intmp == 4
-        path = 'C:\Users\82104\Documents\Physics\Research\data\Kondo_Aniso';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\Kondo_Aniso';
     elseif intmp == 5
-        path = 'C:\Users\82104\Documents\Physics\Research\data\ThsoK';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\ThsoK';
     elseif intmp == 6
-        path = 'C:\Users\82104\Documents\Physics\Research\data\Quartic';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\Quartic';
     elseif intmp == 7
-        path = 'C:\Users\82104\Documents\Physics\Research\data\LineSearch';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\LineSearch';
     else
         fprintf('WRN: Invalid input\n');
         intmp = input('>>> ');

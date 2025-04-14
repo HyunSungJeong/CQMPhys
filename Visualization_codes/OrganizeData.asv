@@ -1,0 +1,26 @@
+clear;
+Datapath = 'C:\Users\hsjun\OneDrive\Physics\Research\data\Quartic';
+FileInfo = dir(Datapath);
+NewPath = 'C:\Users\hsjun\OneDrive\Physics\Research\CQMPhys\Visualization_codes\QuarticData_Espectrum';
+
+cnt = 1;
+for it = (1:numel(FileInfo))
+    DirName = FileInfo(it).name;
+    if DirName(1) == 'K'
+        tmp = sscanf(DirName, 'K_z=%f_Q=%f_T=%f_Nkeep=%f');
+        K_z = tmp(1);
+        Q = tmp(2);
+        T = tmp(3);
+        Nkeep = tmp(4);
+        if Nkeep == 3000
+            LoadPath = [Datapath,filesep,DirName];
+            mkdir([NewPath,filesep,DirName])
+            Etot = load([LoadPath,filesep,'Etot.mat']);
+            Etot = Etot.Etot;
+            Qtot = load([LoadPath,filesep,'Qtot.mat']);
+            Qtot = Qtot.Qtot;
+            cnt = cnt + 1;
+        end
+    end
+end
+
