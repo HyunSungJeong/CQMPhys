@@ -31,7 +31,7 @@ function Espec = PK_Espectrum(Lambda_z, Lambda_x, N_iter, Nshow)
     U1charge_1 = round(Elev(:,2));
     U1charge_2 = round(Elev(:,3));
     SU2spin_1 = round(Elev(:,4))/2;
-    SU2spin_2 = round(Elev(:,5)).2;
+    SU2spin_2 = round(Elev(:,5))/2;
 
     Espec = table(Energy_levels,U1charge_1,U1charge_2,SU2spin_1,SU2spin_2);
 end
