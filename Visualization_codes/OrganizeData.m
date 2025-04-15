@@ -1,9 +1,11 @@
 clear;
 Datapath = 'C:\Users\hsjun\OneDrive\Physics\Research\data\Quartic';
-NewPath = 'C:\Users\hsjun\OneDrive\Physics\Research\CQMPhys\Visualization_codes\QuarticData_Espectrum';
+NewPath = 'C:\Users\hsjun\OneDrive\Physics\Research\CQMPhys\Visualization_codes\PKData_Espectrum';
 FileInfo = dir(Datapath);
 
 cnt = 1;
+lambda_x = [];
+lambda_z = [];
 for it = (1:numel(FileInfo))
     DirName = FileInfo(it).name;
     if DirName(1) == 'K'
@@ -28,6 +30,9 @@ for it = (1:numel(FileInfo))
     
                 disp(['Moved ',sprintf('%d',cnt),' espectrum data']);
                 cnt = cnt + 1;
+            else
+                lambda_z = [lambda_z; K_z/2];
+                lambda_x = [lambda_x; Q];
             end
             
         end
@@ -36,5 +41,7 @@ end % it
 
 if cnt == 1
     disp('All data are up to date');
+    Avail = table(lambda_z, lambda_x);
+    disp(Avail);
 end
 
