@@ -17,7 +17,7 @@ function TsoK_par (varargin)
 
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   h_vmem = 250;           % Memory (in GB) to be occupied in clusters
-  PE = 20;                 % # of cores to be occupied in clusters
+  PE = 24;                % # of cores to be occupied in clusters
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   Nkeep = 5000;
   nz = ones(1,num_jobs);

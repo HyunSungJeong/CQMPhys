@@ -6,9 +6,9 @@ function Anderson_4flav_NRG(parfn,varargin)
 
         partot = job_func_preamble(parfn, varargin{:});
     
-        [PE, Nkeep, Hyb, U, J_S, J_L, epsilon, T, JobName, nz] = loadvar(partot, ...
-            {'PE', 'Nkeep', 'Hyb', 'U', 'J_S', 'J_L', 'epsilon', 'T', 'JobName', 'nz'}, ...
-                {[], [], [], [], [], [], [], [], [], []});
+        [PE, Nkeep, Hyb, U, J, N0, T, JobName, nz] = loadvar(partot, ...
+            {'PE', 'Nkeep', 'Hyb', 'U', 'J', 'N0', 'T', 'JobName', 'nz'}, ...
+                {[], [], [], [], [], [], [], [], []});
     
         %num_threads_SL(8);
         
@@ -23,15 +23,14 @@ function Anderson_4flav_NRG(parfn,varargin)
         
         % Impurity Hamiltonian parameters
         % U : Hubbard U
-        % J_S : inter-orbital spin-spin exchange coupling
-        % J_L : anisotropic Hund coupling
+        % J : inter-valley exchange interaction
         % epsilon : on-site level
     
         % T : Temperature
         % Hyb : hybridization strength
         D = 1;                  % half-bandwidth
         ozin = [-1;1]*D;        % input frequency grid on which the hybridization function is evaluated    
-        RhoV2in = [1;1]*hyb;    % hybridization function
+        RhoV2in = [1;1]*Hyb;    % hybridization function
     
         % NRG parameters
         Lambda = 4;
@@ -44,11 +43,11 @@ function Anderson_4flav_NRG(parfn,varargin)
 
 
         %% Define local operators
-        [FF, ZF, SF, IF] = getLocalSpace('FermionS', 'Acharge,SU2spin','NC',1);
-        Fcell = {FF, ZF, SF, IF.E; FF, ZF, SF, IF.E};
-        sym = {'A'};
-        symnum = [2; 1];
-        tagname = {'a1', 'a2'};
+        [FF, ZF, SF, IF] = getLocalSpace('FermionS', 'Acharge(:),SU2spin','NC',2);
+        Fcell = {FF(1), FF(2), ZF, SF, IF.E; FF(1), FF(2), ZF, SF, IF.E};
+        sym = {'A','A','SU2'};
+        symnum = [3,4,6; 1,2,5];
+        tagname = {'o1', 'o2'};
 
         for it1 = 1:size(Fcell, 2)          % F,Z,S,I, respectively
             for it2 = 1:size(symnum, 1)     % 2,4 to F1, 1,3 to F2
@@ -60,28 +59,32 @@ function Anderson_4flav_NRG(parfn,varargin)
             end
         end
 
-        A = getIdentity(Fcell{1, 4}, 2, Fcell{2, 4}, 2, 's00');
-        FF = QSpace(1, 2); ZF = QSpace(1, 2); SF = QSpace(1, 2); NF = QSpace(1, 2);
-        FF(1) = contract(A, '!3*', {Fcell{1, 1}, '!1', {A, Fcell{2, 2}}}, [1 3 2]);
-        FF(2) = contract(A, '!3*', {Fcell{2, 1}, '!1', A}, [1 3 2]);
+        A = getIdentity(Fcell{1, 5}, 2, Fcell{2, 5}, 2, 's00');
+        FF = QSpace(1, 4); ZF = QSpace(1, 2); SF = QSpace(1, 2); NF = QSpace(1, 2);
+        FF(1) = contract(A, '!3*', {Fcell{1, 1}, '!1', {A, Fcell{2, 3}}}, [1 3 2]);
+        FF(2) = contract(A, '!3*', {Fcell{1, 2}, '!1', {A, Fcell{2, 3}}}, [1 3 2]);
+        FF(3) = contract(A, '!3*', {Fcell{2, 1}, '!1', A}, [1 3 2]);
+        FF(4) = contract(A, '!3*', {Fcell{2, 2}, '!1', A}, [1 3 2]);
+        % FF: orb1 valley+, orb1 valley-, orb2 valley+, orb2 valley-
 
         for it1 = 1:size(Fcell, 1)
-            ZF(it1) = contract(A, '!3*', {Fcell{it1, 2}, '!1', A});
-            SF(it1) = contract(A, '!3*', {Fcell{it1, 3}, '!1', A}, [1 3 2]);
+            ZF(it1) = contract(A, '!3*', {Fcell{it1, 3}, '!1', A});
+            SF(it1) = contract(A, '!3*', {Fcell{it1, 4}, '!1', A}, [1 3 2]);
+        end
+        Stot = SF(1) + SF(2);         % total spin
+
+        for it1 = 1:numel(FF)
             NF(it1) = quadOp(FF(it1), FF(it1), []);
         end
-
-        Stot = SF(1) + SF(2);
-        L_z = (1/2)*( contract(FF(1),'!2*',FF(1)) - contract(FF(2),'!2*',FF(2)) );
-        EF = contract(A, '!3*', {Fcell{1, 4}, '!1', A});
+        EF = contract(A,'!3*',A);
 
         % interacting term in the impurity Hamiltonian
-        HU = (U/2)*sum(NF)*(sum(NF)-EF);
+        HU = (U/2)*sum(NF)*sum(NF);
         HU = HU + J_S*(contract(Stot,'!2*',Stot) - contract(SF(1),'!2*',SF(1)) - contract(SF(2),'!2*',SF(2)));
         HU = HU - J_L*(contract(L_z,'!2*',L_z) - sum(NF));
 
         % quadratic term in the impurity Hamiltonian
-        Hmu = epsilon*sum(NF);
+        Hmu = - U*N0*sum(NF);
 
         % isometry connecting the impurity and the first bath site
         A0 = getIdentity(setItag('L00',getvac(EF)),2,EF,2,'K00*',[1 3 2]);

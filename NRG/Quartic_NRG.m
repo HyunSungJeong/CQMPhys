@@ -120,7 +120,7 @@ function Quartic_NRG(parfn,varargin)
     
         nrgdata = cell(1,nz);
 
-        for itz = (1:nz)
+        for itz = 1:nz
             nrgdata{itz} = NRG_SL([],H0,A0,Lambda,ff{itz}(2:end),Fs,Zs,'Nkeep',Nkeep,'deps',1e-10);
             nrgdata{itz} = getRhoFDM(nrgdata{itz},T,'-v','Rdiag',true);   % calculating the full density matrix(FDM)
         end
