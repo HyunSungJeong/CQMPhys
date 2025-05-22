@@ -13,6 +13,11 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
     %                           (Default: 0.05)
     % 'platLenThres', .. : [numeric] minimum length of plateau(in log_{10} scale) to be considered as a well-defined phase
     %                           (Default: 1)
+    % 'NFLboundary' : if used, the boundary between NFL phase and FL phase is defined as the lowerest temperature showing NFL power law.
+    %                 if not used, the boundary between NFL phase and FL phase is defined as the highest temperature showingFL power law.
+    %                           (Default: not used)
+    % 'I0min', ... : [numeric] minimum absolute value of I0 to be used in the plot
+    %                           (Default: 10^{-14})
     % '-v' : when used, impurity spin susceptibilities are plotted with phase ranges for the used parameter sets
     %       (Default: not used)
     %
@@ -34,8 +39,10 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
     %% Parse options
 
     flatThres = 0.05;   % default value of 'flatThres'
-    platLenThres = 1;   % default value of 'platLenThres'
+    platLenThres = 0.5;   % default value of 'platLenThres'
     plotSusc = false;
+    NFLboundary = false;
+    I0min = 1e-14;
 
     while ~isempty(varargin)
         switch varargin{1}
@@ -63,6 +70,22 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
                 end
                 varargin(1:2) = [];
 
+            case 'NFLboundary'
+                NFLboundary = true;
+                varargin(1) = [];
+
+            case 'I0min'
+                if isnumeric(varargin{2})
+                    if varargin{2} > 0
+                        I0min = varargin{2};
+                        varargin(1:2) = [];
+                    else
+                        error('ERR: ''I0min'' must be positive');
+                    end
+                else
+                    error('ERR: ''I0min'' must be a number');
+                end
+
             case '-v'
                 plotSusc = true;
                 varargin(1) = [];
@@ -78,7 +101,7 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
     end
 
     %% Load the selected data folder
-    path = 'C:\Users\82104\Documents\Physics\Research\data\TsoK_Selected';
+    path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\TsoK_selected';
     FileInfo = dir(path);
 
     %% Make a list of the names of data folders
@@ -105,13 +128,21 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
         I(it) = tmp(3);
         T(it) = tmp(4);
     end
+    [I, idx] = sort(I,'ascend');
+    J = J(idx);
+    K = K(idx);
+    T = T(idx);
+    DataFolders = DataFolders(idx);
 
     %% Load data to be used for plotting
-    RelevIdx = (J == J0) & (K == K0) & (abs(I) < 0.2);       % Indices of folders that are relevant for plotting
+    RelevIdx = (J == J0) & (K == K0) & (abs(I) < 0.2) & (abs(I) >= I0min);       % Indices of folders that are relevant for plotting
     RelevData = DataFolders(RelevIdx);      % folder names of data that are relevant for plotting: ones that are (J, K) = (J0, K0)
     I = I(RelevIdx);                        % parameters 'I' that are available for plotting
     N_Relev = numel(RelevData);             % number of relevant data
-
+    %disp(RelevIdx);
+    %disp(J);
+    %disp(K);
+    %disp(I);
 
     ocont = cell(1,numel(RelevData));
     ImpSp = ocont;
@@ -145,7 +176,7 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
                         field = fieldnames(tmp);
                         ImpSpOrb{itSub} = getfield(tmp, field{1});
 
-                end %switch
+                end % switch - case
         end % itD
 
     end % itF
@@ -184,7 +215,7 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
                         plateauMax = itT - 1;
                         
                         if logT(plateauMax) - logT(plateauMin) > platLenThres
-                            Range_Plateau{itS} = cat(1,Range_Plateau{itS}, [logT(plateauMin), logT(plateauMax)]);
+                            Range_Plateau{itS} = cat(1, Range_Plateau{itS}, [logT(plateauMin), logT(plateauMax)]);
                         end
                     end
     
@@ -193,7 +224,7 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
 
         end % itS
 
-        %% Determine phase ranges from the plateaus found above
+        %% Determine phases of the plateau regions found above
 
         Phase_range{itSub} = [];
         Phase_name{itSub} = {};
@@ -209,37 +240,84 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
 
                 maxMin = max(range_Sp(1), range_Orb(1));
                 minMax = min(range_Sp(2), range_Orb(2));
-                if maxMin < minMax
+                if maxMin < minMax      % if plateau range is well-defined    
 
                     [ExpSp, ~] = logFit(logT,logSp,[maxMin,minMax]);
                     [ExpOrb, ~] = logFit(logT,logOrb,[maxMin,minMax]);
 
-                    if abs(ExpSp-1) < 0.1 && abs(ExpOrb-1) < 0.1
+                    eps = 0.1;  % a small number
+                    if abs(ExpSp-1) < eps && abs(ExpOrb-1) < eps
                         Phase_range{itSub} = cat(1,Phase_range{itSub},[-24, minMax]);
                         Phase_name{itSub} = cat(1,Phase_name{itSub},{'Fermi Liquid'});
-                    elseif abs(ExpSp) < 0.1
-                        if abs(ExpOrb) < 0.1
-                            Phase_range{itSub} = cat(1,Phase_range{itSub},[maxMin, minMax]);
-                            Phase_name{itSub} = cat(1,Phase_name{itSub},{'Fully Overscreened'});
-                        elseif ExpOrb < -1
-                            Phase_range{itSub} = cat(1,Phase_range{itSub},[maxMin, minMax]);
-                            Phase_name{itSub} = cat(1,Phase_name{itSub},{'Spin Overscreened'});
-                        end
-                    elseif ExpSp < -1
-                        if abs(ExpOrb) < 0.1
-                            Phase_range{itSub} = cat(1,Phase_range{itSub},[maxMin, minMax]);
-                            Phase_name{itSub} = cat(1,Phase_name{itSub},{'Orbital Overscreened'});
-                        elseif ExpOrb < -1
-                            Phase_range{itSub} = cat(1,Phase_range{itSub},[maxMin, max(3,minMax)]);
-                            Phase_name{itSub} = cat(1,Phase_name{itSub},{'Unscreened'});
-                        end
+
+                    elseif abs(ExpSp) < eps && abs(ExpOrb) < eps
+                        Phase_range{itSub} = cat(1,Phase_range{itSub},[maxMin, minMax]);
+                        Phase_name{itSub} = cat(1,Phase_name{itSub},{'Fully Overscreened'});
+                        
+                    elseif ExpSp < -1 && ExpOrb < -1
+                        Phase_range{itSub} = cat(1,Phase_range{itSub},[maxMin, max(3,minMax)]);
+                        Phase_name{itSub} = cat(1,Phase_name{itSub},{'Unscreened'});
                     end
+                    
+                        
                 end
             end % it2
         end % it1
 
+        for it = 1:size(Range_Plateau{1},1)
+            [ExpSp, ~] = logFit(logT,logSp,Range_Plateau{1}(it,:));
+            [ExpOrb, ~] = logFit(logT,logOrb,Range_Plateau{1}(it,:));
+            
+            if abs(ExpSp) < eps && abs(ExpOrb) > eps
+                Phase_range{itSub} = cat(1, Phase_range{itSub}, Range_Plateau{1}(it,:));
+                Phase_name{itSub} = cat(1, Phase_name{itSub}, {'Spin Overscreened'});
+            end
+        end
+
+        for it = 1:size(Range_Plateau{2},1)
+            [ExpSp, ~] = logFit(logT,logSp,Range_Plateau{2}(it,:));
+            [ExpOrb, ~] = logFit(logT,logOrb,Range_Plateau{2}(it,:));
+
+            if abs(ExpOrb) < eps && abs(ExpSp) > eps
+                Phase_range{itSub} = cat(1, Phase_range{itSub}, Range_Plateau{2}(it,:));
+                Phase_name{itSub} = cat(1, Phase_name{itSub}, {'Orbital Overscreened'});
+            end
+        end 
+
+        if ismember('Fully Overscreened', Phase_name{itSub})
+            Idx1 = find(strcmp(Phase_name{itSub}, 'Fully Overscreened'));
+
+            if ismember('Spin Overscreened', Phase_name{itSub})
+                Idx2 = find(strcmp(Phase_name{itSub}, 'Spin Overscreened'));
+                Phase_range{itSub}(Idx2,1) = Phase_range{itSub}(Idx1,2);
+
+            elseif ismember('Orbital Overscreened', Phase_name{itSub})
+                Idx2 = find(strcmp(Phase_name{itSub}, 'Orbital Overscreened'));
+                Phase_range{itSub}(Idx2,1) = Phase_range{itSub}(Idx1,2);
+            end
+        end
+
+        %% Clarify phase boundaries
+
+        if ~isempty(Phase_range{itSub})
+            if Phase_range{itSub}(1,1) > -22
+                if NFLboundary
+                    Phase_range{itSub} = cat(1, [-24, Phase_range{itSub}(1,1)], Phase_range{itSub});
+                    Phase_name{itSub} = cat(1, {'Fermi Liquid'}, Phase_name{itSub});
+                else
+                end
+
+            elseif isequal(Phase_name{itSub}{1}, 'Fermi Liquid') && numel(Phase_name{itSub}) > 1
+                if NFLboundary
+                    Phase_range{itSub}(1,2) = Phase_range{itSub}(2,1);
+                else
+                    Phase_range{itSub}(2,1) = Phase_range{itSub}(1,2);
+                end
+            end
+        end
+
         
-    end % itF
+    end % itSub
 
     %% Plot deailed figures, if '-v' option is used
 
@@ -265,21 +343,26 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
 
             for itSub = 1:Nsub
                
+                DataNum = itSub + 23*(itP-1);
                 ax = subplot(4,6,itSub);
                 hold on;
-                PosIdx = ImpSp{itSub} > 0 & ImpOrb{itSub};
-                Sp = plot(ocont{itSub}(PosIdx),ImpSp{itSub}(PosIdx),'color','blue','Linewidth',1,'LineStyle','-');
-                Orb = plot(ocont{itSub}(PosIdx),ImpOrb{itSub}(PosIdx),'color','red','Linewidth',1,'LineStyle','--');
+                PosIdx = ImpSp{DataNum} > 0 & ImpOrb{DataNum};
+                if ~isempty(ocont{DataNum})
+                    Sp = plot(ocont{DataNum}(PosIdx),ImpSp{DataNum}(PosIdx),'color','blue','Linewidth',1,'LineStyle','-');
+                    Orb = plot(ocont{DataNum}(PosIdx),ImpOrb{DataNum}(PosIdx),'color','red','Linewidth',1,'LineStyle','--');
+                end
                 set(ax,'XScale','log','YScale','log');
-                title(['$\left(J_{0},K_{0},I_{0}\right) = \left(',sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I(itSub)),'\right)$'], ...
+                title(['$\left(J_{0},K_{0},I_{0}\right) = \left(',sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',SciNot(I(DataNum),'Signif',1),' \right)$'], ...
                         'Interpreter','latex','FontSize',7);
         
+                xlim([1e-24,1e3]);
+                ylim([1e-15, 1e10]);
                 Yrange = ylim;
-                for it = 1:numel(Phase_name{itSub})
-                    patch_X = power(10, [Phase_range{itSub}(it,:),Phase_range{itSub}(it,2:-1:1)]);
+                for it = 1:numel(Phase_name{DataNum})
+                    patch_X = power(10, [Phase_range{DataNum}(it,:),Phase_range{DataNum}(it,2:-1:1)]);
                     patch_Y = [Yrange(1),Yrange(1),Yrange(2),Yrange(2)];
         
-                    switch Phase_name{itSub}{it}
+                    switch Phase_name{DataNum}{it}
                         case 'Fermi Liquid'
                             Phase_handles{1} = patch(patch_X,patch_Y,'green','FaceAlpha', 0.3, 'linestyle', 'none');
                             ExistPhase(1) = true;
@@ -321,29 +404,33 @@ function [I, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,varargin)
             sgtitle('$\mathrm{Second \ Derivatives \ of \ Impurity \ Dynamic \ Susceptibilities}$','Interpreter','latex','FontSize',20);
 
             for itSub = 1:Nsub
-               
-                PosIdx = ImpSp{itSub} > 0 & ImpOrb{itSub};
-                [logT, Sp_2ndDer] = log_Susc_2ndDer(ocont{itSub}(PosIdx), ImpSp{itSub}(PosIdx));    % second derivative of impurity spin dynamic susceptibility
-                [~, Orb_2ndDer] = log_Susc_2ndDer(ocont{itSub}(PosIdx), ImpOrb{itSub}(PosIdx));    % second derivative of impurity spin dynamic susceptibility
+
+                DataNum = itSub + 23*(itP-1);
+                PosIdx = ImpSp{DataNum} > 0 & ImpOrb{DataNum};
+                [logT, Sp_2ndDer] = log_Susc_2ndDer(ocont{DataNum}(PosIdx), ImpSp{DataNum}(PosIdx));    % second derivative of impurity spin dynamic susceptibility
+                [~, Orb_2ndDer] = log_Susc_2ndDer(ocont{DataNum}(PosIdx), ImpOrb{DataNum}(PosIdx));    % second derivative of impurity spin dynamic susceptibility
                 Sp_2ndDer_mov = movmean(Sp_2ndDer,[10,10]);
                 Orb_2ndDer_mov = movmean(Orb_2ndDer,[10,10]);
 
                 ax = subplot(4,6,itSub);
                 hold on;
                 
-                Sp = plot(power(10,logT),Sp_2ndDer_mov,'color','blue','Linewidth',1,'LineStyle','-');
-                Orb = plot(power(10,logT),Orb_2ndDer_mov,'color','red','Linewidth',1,'LineStyle','--');
+                if ~isempty(ocont{DataNum})
+                    Sp = plot(power(10,logT),Sp_2ndDer_mov,'color','blue','Linewidth',1,'LineStyle','-');
+                    Orb = plot(power(10,logT),Orb_2ndDer_mov,'color','red','Linewidth',1,'LineStyle','--');
+                end
                 set(ax,'XScale','log','YScale','linear');
-                title(['$\left(J_{0},K_{0},I_{0}\right) = \left(',sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I(itSub)),'\right)$'], ...
+                title(['$\left(J_{0},K_{0},I_{0}\right) = \left(',sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',SciNot(I(DataNum),'Signif',1),' \right)$'], ...
                         'Interpreter','latex','FontSize',7);
         
+                xlim([1e-24,1e3]);
                 ylim([-1,1]);
                 Yrange = ylim;
-                for it = 1:numel(Phase_name{itSub})
-                    patch_X = power(10, [Phase_range{itSub}(it,:),Phase_range{itSub}(it,2:-1:1)]);
+                for it = 1:numel(Phase_name{DataNum})
+                    patch_X = power(10, [Phase_range{DataNum}(it,:),Phase_range{DataNum}(it,2:-1:1)]);
                     patch_Y = [Yrange(1),Yrange(1),Yrange(2),Yrange(2)];
         
-                    switch Phase_name{itSub}{it}
+                    switch Phase_name{DataNum}{it}
                         case 'Fermi Liquid'
                             Phase_handles{1} = patch(patch_X,patch_Y,'green','FaceAlpha', 0.3, 'linestyle', 'none');
                         case 'Orbital Overscreened'

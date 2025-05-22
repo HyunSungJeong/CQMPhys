@@ -12,6 +12,8 @@
 % rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/ThsoK /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync Quartic data)
 % rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/Quartic /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
+% (To sync 8flav data)
+% rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/8flav /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 % (To sync LineSearch data)
 % rsync -avz --delete --progress -e 'ssh -p 1018' hyunsung@147.46.44.239:/data/hyunsung/LineSearch /mnt/c/Users/hsjun/OneDrive/Physics/Research/data
 
@@ -23,8 +25,9 @@ strtmp{2} = '2: TsoK_Aniso_NRG';
 strtmp{3} = '3: TCK_Aniso_NRG';
 strtmp{4} = '4: Kondo_Aniso_NRG';
 strtmp{5} = '5: ThsoK_NRG';
-strtmp{5} = '6: Quartic_NRG';
-strtmp{6} = '7: LineSearch';
+strtmp{6} = '6: Quartic_NRG';
+strtmp{7} = '7: Anderson_8flav_NRG';
+strtmp{8} = '8: LineSearch';
 dispbox('-width',75,strtmp{:});
 fprintf('Choose index of calculation type to plot\n');
 intmp = input('>>> ');
@@ -44,6 +47,8 @@ while isempty(path)
     elseif intmp == 6
         path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\Quartic';
     elseif intmp == 7
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\8flav';
+    elseif intmp == 8
         path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\LineSearch';
     else
         fprintf('WRN: Invalid input\n');
@@ -60,7 +65,7 @@ if intmp == 1       % TsoK_NRG
     for it = (1:numel(FileInfo))
         DirName = FileInfo(it).name;
         if DirName(1) == 'J' || DirName(1) == 'T'
-            strtmp = cat(2,strtmp,[sprintf('%.15gc;',cnt),': ',DirName]);
+            strtmp = cat(2,strtmp,[sprintf('%.15g',cnt),': ',DirName]);
             cnt = cnt + 1;
         end
     end
@@ -3363,6 +3368,338 @@ elseif intmp == 6   % Quartic_NRG
                             sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
             hold off;
         end
+    end
+
+
+elseif intmp == 7   % Anderson_8flav_NRG
+    
+    FileInfo = dir(path);
+    strtmp = cell(0,0);
+    cnt = 1;
+    for it = (1:numel(FileInfo))
+        DirName = FileInfo(it).name;
+        if DirName(1) == 'H' || DirName(1) == 'T'
+            strtmp = cat(2, strtmp, [sprintf('%.15g',cnt),': ',DirName]);
+            cnt = cnt + 1;
+        end
+    end
+    dispbox('-width',130,strtmp{:});
+    fprintf('Choose the index of the data set to plot\n');
+
+    ValidIdx = false;
+
+    while ~ValidIdx
+        idx = input('>>> ');
+        if ismember(idx,(1:numel(strtmp)))
+            ValidIdx = true;
+        else
+            fprintf('WRN: Invalid input\n');
+        end
+    end
+
+    % extract parameters from folder name
+    tmp = sscanf(strtmp{idx}, [sprintf('%d',idx),': Hyb=%f_U=%f_J=%f_N0=%f_T=%f_Nkeep=%f']);
+    Hyb = tmp(1);
+    U = tmp(2);
+    J = tmp(3);
+    N0 = tmp(4);
+    T = tmp(5);
+
+    tmp = strtmp{idx};
+    path = [path, filesep, tmp(numel(num2str(idx))+3:end)];
+
+    % make a list of unnecessary file infos
+    FileInfo = dir(path);
+    EraseIdx = [];
+    for it = (1:numel(FileInfo))
+        DirName = FileInfo(it).name;
+        if isequal(DirName,'.')                 % Erase '.'
+            EraseIdx = cat(2,EraseIdx,it);
+        elseif isequal(DirName,'..')            % Erase '..'
+            EraseIdx = cat(2,EraseIdx,it);
+        elseif isequal(DirName,'8flav')         % Erase log files
+            EraseIdx = cat(2,EraseIdx,it);
+        end
+    end
+    FileInfo(EraseIdx) = [];    % Erase selected unnecessary file infos
+
+    Eflow = cell(2,1);      % RG flow data. 1: Etot, 2: Qtot
+    ImpDyn = cell(8,1);     % Impurity dynamical susceptibilities. 1: ImpSp1m, 2: ImpSp1p, 3: ImpSp2m, 4: ImpSp2p, 5: Charge1m, 6: Charge1p, 7: Charge2m, 8: Charge2p
+    BathDyn = cell(0,1);    % Bath dynamic susceptibilities. 
+    avail = false*ones(1,4);
+    % RGflow, ImpDyn, Second derivatives of ImpDyn, Impurity contribution to entropy
+
+    % Check availabel and unavailable data
+    for it = (1:numel(FileInfo))
+        tmp = load([FileInfo(it).folder, filesep, FileInfo(it).name]);
+        field = fieldnames(tmp);
+
+        switch FileInfo(it).name
+            case 'Etot.mat'
+                Eflow{1} = getfield(tmp, field{1});
+                avail(1) = true;
+            case 'Qtot.mat'
+                Eflow{2} = getfield(tmp, field{1});
+                avail(1) = true;
+            case 'ocont.mat'
+                ocont = getfield(tmp, field{1});
+            case 'NRG_Op=ImpSp1m.mat'
+                ImpDyn{1} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=ImpSp1p.mat'
+                ImpDyn{2} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=ImpSp2m.mat'
+                ImpDyn{3} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=ImpSp2p.mat'
+                ImpDyn{4} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=Charge1m.mat'
+                ImpDyn{5} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=Charge1p.mat'
+                ImpDyn{6} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=Charge2m.mat'
+                ImpDyn{7} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'NRG_Op=Charge2p.mat'
+                ImpDyn{8} = getfield(tmp, field{1});
+                avail(2) = true;
+                avail(3) = true;
+            case 'Sent_imp.mat'
+                Sent_imp = getfield(tmp, field{1});
+                avail(4) = true;
+            case 'Temps.mat'
+                Temps = getfield(tmp, field{1});
+            otherwise
+                fprintf('WRN: unknown data type');
+        end
+    end
+
+    strtmp = cell(1,0);
+    options = [];
+    if avail(1)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': RG flow diagram']});
+        options = [options,1];
+    end
+    if avail(2)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Impurity dynamic susceptibilities']});
+        options = [options,2];
+    end
+    if avail(3)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Second derivatives of impurity dynamic susceptibilities']});
+        options = [options,3];
+    end
+    if avail(4)
+        strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': Impurity contribution to entropy']});
+        options = [options,4];
+    end
+    strtmp = cat(2, strtmp, {[sprintf('%d',numel(strtmp)+1),': All of the above']});
+    dispbox('-width',130,strtmp{:});
+
+    fprintf('Which one do you want to plot?\n');
+    intmp = input('>>> ');
+
+    if intmp == numel(options)+1    % plot all
+        chosen = avail;
+    else
+        chosen = false*ones(1,4);
+        chosen(options(intmp)) = true;
+        while ~isempty(intmp) && ~isequal(chosen, avail)
+            fprintf('Type the index of data you want to plot\n');
+            fprintf('(Press enter to finish)\n');
+            intmp = input('>>> ');
+            if intmp == numel(options) + 1
+                chosen = avail;
+            else
+                chosen(options(intmp)) = true;
+            end
+        end
+    end
+
+    if avail(1) && chosen(1)
+        %{
+        plotE(Eflow{1}, Eflow{2}, 'title', '$ \mathrm{ RGflow: \ U(1)_{c1} \times U(1)_{c2} \times SU(2)_{sp}} $', 'FontSize', 15, ...
+                                                'Emax',1.3,'legmax',8,'Qdiff',[0,0,0]);
+        %}
+        %{}
+        plotE(Eflow{1}, Eflow{2}, 'title', '$ \mathrm{ RGflow: \ U(1)_{c1+} \times U(1)_{c1-} \times U(1)_{c2+} \times U(1)_{c2-} \times SU(2)_{sp1} \times SU(2)_{sp2}} $', 'FontSize', 13, ...
+                                                'Emax',3,'legmax',13,'Qdiff',[0,0,0,0,0,0]);
+        %}
+    end
+
+    if avail(2) && avail(3)
+
+        names = {'$\chi_{\mathrm{sp1+}}$', '$\chi_{\mathrm{sp1-}}$', '$\chi_{\mathrm{sp2+}}$', '$\chi_{\mathrm{sp2-}}$', ...
+                    '$\chi_{\mathrm{c1+}}$', '$\chi_{\mathrm{c1-}}$', '$\chi_{\mathrm{c2+}}$', '$\chi_{\mathrm{c2-}}$'};
+        legends = cell(0,0);
+        for it = (1:numel(names))
+            if isempty(ImpDyn{it})
+                ImpDyn{it} = [];
+            else
+                legends = cat(2,legends,names{it});
+            end
+        end
+        
+        num_ImpDyn = numel(ImpDyn);         % number of impurity dynamic susceptibilities
+
+        log_T = log(ocont(ocont>0))./log(10);       % log temperatures
+        log_ImpDyn = cell(num_ImpDyn,1);            % log impurity dynamic sysceptibilities
+        log_ImpDyn_1stDer = cell(num_ImpDyn,1);     % first derivatives
+        log_T_1stDer = cell(num_ImpDyn,1);          % log temperatures for first derivatives
+        log_ImpDyn_2ndDer = cell(num_ImpDyn,1);     % second derivatives
+        log_T_2ndDer = cell(num_ImpDyn,1);          % log temperatures for second derivatives
+
+        disp(ImpDyn);
+        disp(size(ocont));
+        for it = (1:num_ImpDyn)
+            tmp = ImpDyn{it};
+            log_ImpDyn{it} = log(tmp(ocont>0))./log(10);
+
+            log_ImpDyn_1stDer{it} = diff(log_ImpDyn{it},1)./diff(log_T,1);      % first derivative
+            tmp = movmean(log_T, [0,1]);                                        
+            log_T_1stDer{it} = tmp(1:end-1);                                    % log temperatures for first derivatives
+
+            log_ImpDyn_2ndDer{it} = diff(log_ImpDyn_1stDer{it},1)./diff(log_T_1stDer{it},1);    % second derivative
+            tmp = movmean(log_T_1stDer{it}, [0,1]);
+            log_T_2ndDer{it} = tmp(1:end-1);                                                    % log temperatures for second derivatives
+        end
+
+        if chosen(2)
+
+            figure;
+            
+            hold on;
+            linestyle = {'-', '-.', '--'};
+            for it = (1:num_ImpDyn)
+                plot(ocont(ocont<1), ImpDyn{it}(ocont<1), 'LineWidth',2,'LineStyle',linestyle{rem(it,3)+1});
+            end
+            
+            %xlim([1e-25,1]);
+            %ylim([1e-7,1]);
+            ax = gca;
+            ax.XAxis.FontSize = 5;
+            ax.YAxis.FontSize = 5;
+            legend(legends,'Interpreter','latex','Location','best','FontSize',30);
+
+            set(gca,'XScale','log','YScale','log','FontSize',25);
+            xlabel('$\omega$','Interpreter','latex','FontSize',30);
+            ylabel('$\chi_{\mathrm{imp}} (\omega)$','Interpreter','latex','FontSize',30);
+            %title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities}$'],'Interpreter','latex','FontSize',30);
+            %{}
+            title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities} \ (\lambda_{z}, \lambda_{x}) = (', ...
+                        sprintf('%.15g',K_z/2),', ',sprintf('%.15g',Q),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',25);
+            %}
+
+            %{}
+            legend('AutoUpdate','off');
+            log_ImpDyn = cat(1,log_ImpDyn,{ zeros(1,numel(log_T)) ; zeros(1,numel(log_T)) } );
+            %log_ImpDyn = cat(1,log_ImpDyn,{log_ImpDyn{1}; zeros(1,numel(log_T))} );
+            fit_range = [-6, -11; 0, 0; 0, 0];
+            [a1,Rsq1,a2,Rsq2,~,~] = Insert(log_T, log_ImpDyn,fit_range);
+
+            x1 = fit_range(1,:);
+            text_x = (x1(1)+x1(2))/2 - 0.5;
+            text_y = polyval(a1,text_x) + 0.5;
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y1 = polyval(a1,x1) + 0.15;
+            x1 = power(10,x1);
+            y1 = power(10,y1);
+            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            %plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
+            plot(x1,y1,'-','Color','black','LineWidth',1);
+            text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
+
+            %{
+            x2 = fit_range(2,:);
+            text_x = (x2(1)+x2(2))/2 - 0.7;
+            text_y = polyval(a2,text_x) + 1.8;
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y2 = polyval(a2,x2)+0.5;
+            x2 = power(10,x2);
+            y2 = power(10,y2);
+            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            plot(x2,y2,'-','Color','black','LineWidth',1);
+            text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
+            %}
+            %}
+
+            hold off;
+        end
+
+        if chosen(3)
+            figure;
+            hold on;
+            linestyle = {'-', '-.', '--'};
+            legend('AutoUpdate','on');
+            for it = (1:num_ImpDyn)
+                X = log_T_2ndDer{it};
+                Y = log_ImpDyn_2ndDer{it};
+                plot(X, Y,'LineWidth',2,'LineStyle',linestyle{rem(it,3)+1});
+            end
+            legend('AutoUpdate','off');
+            for it = (1:num_ImpDyn)
+                [Minima, ~, MinPos] = LocMin(log_T_2ndDer{it}, log_ImpDyn_2ndDer{it});
+                [Maxima, ~, MaxPos] = LocMax(log_T_2ndDer{it}, log_ImpDyn_2ndDer{it});
+                plot(MinPos, Minima, 'o', 'Color', 'blue', 'LineWidth', 2);
+                plot(MaxPos, Maxima, 'o', 'Color', 'red', 'LineWidth', 2);
+            end
+            legend('AutoUpdate','on');
+            ax = gca;
+            ax.XAxis.FontSize = 5;
+            ax.YAxis.FontSize = 5;
+            xlim([log(T)/log(10)-1,3]);
+            ylim([-3,4]);
+            legend(legends,'Interpreter','latex','Location','northeast','FontSize',25);
+            set(gca,'XScale','linear','YScale','linear','fontsize',20);
+            xlabel('$\log T$','Interpreter','latex','FontSize',25);
+            ylabel('$\frac{d^{2} \log \chi''''}{d^{2} \log T} (\omega)$','Interpreter','latex','FontSize',25);
+            title(['$\mathrm{2nd \ Derivatives \ of \ Impurity \ Dynamic \ Susceptibilities} \ (J_{0}, K_{\perp}, K_z, I_{0}) = (', ...
+                        sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',15);
+            hold off;
+        end
+
+    end
+    
+    if avail(6) && chosen(6)
+
+        figure;
+        hold on;
+        Sent_imp = exp(Sent_imp);
+        plot(Temps,Sent_imp,'Linewidth',2);
+        xlim([1e-24,1]);
+        ylim([1,2.1])
+        %plot([1e-22,1],[sqrt(8),sqrt(8)],'--','LineWidth',1.5,'color',[.7,.7,.7]);
+        yaxisproperties= get(gca, 'YAxis');
+        yaxisproperties.TickLabelInterpreter = 'tex';
+        set(gca, 'TickLabelInterpreter', 'latex');
+        ticks = {'1','2'};
+        yticklabels(ticks);
+        yticks([1,2]);
+
+        ax = gca;
+        ax.XAxis.FontSize = 5;
+        ax.YAxis.FontSize = 5;
+        set(gca,'XScale','log','YScale','linear','fontsize',30);
+        xlabel('T','Interpreter','latex','FontSize',30);
+        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',30);
+        title('$\mathrm{Impurity \ contribution \ to \ entropy}$','Interpreter','latex','FontSize',35);
+        %{
+        title(['$\mathrm{Impurity \ contribution \ to \ entropy} \ (K_{z}, Q) = (', ...
+                        sprintf('%.15g',K_z),', ',sprintf('%.15g',Q),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+        %}
+        hold off;
     end
 
 
