@@ -129,9 +129,12 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
 
     %% Run DMRG
 
-    MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for XXZ Heisenberg chain
+    maxNumCompThreads(3);
 
-    disp(['XTRG with Nkeep = ', sprintf('%d', Nkeep), ', Nsweep = ', sprintf('%d', Nsweep)]);    % Run XTRG
+    MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for spin-1/2 XXZ Heisenberg chain
+
+    % Run XTRG
+    disp(['XTRG with Nkeep = ', sprintf('%d', Nkeep), ', Nsweep = ', sprintf('%d', Nsweep)]);
     [rho, ~, ~] = run_XTRG(MPO, tau0, Nkeep, Nsweep, SampleTau);
     
     disp('=======================================================================');

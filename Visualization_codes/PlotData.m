@@ -905,7 +905,10 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             y1 = polyval(a1,x1)+0.5;
             x1 = power(10,x1);
             y1 = power(10,y1);
+            %text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            %
             text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            %
             plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
 

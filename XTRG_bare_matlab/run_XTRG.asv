@@ -112,7 +112,7 @@ function [rho, taus, lnZs] = run_XTRG(MPO, tau0, Nkeep, Nsweep, tauMax, varargin
         rho{1} = rho{1} / Z;
 
         % display information
-        disptime(['Iteration #', sprintf('%d',itS), '/', sprintf('%d',Nstep), ': tau = ', sprintf('%.4g',taus(itS)), '/', ...
+        disptime(['Sweep #', sprintf('%d',itS), '/', sprintf('%d',Nstep), ': tau = ', sprintf('%.4g',taus(itS)), '/', ...
                                             sprintf('%.4g',taus(end)), ', lnZ = ', sprintf('%.4g', lnZs(itS))]);
 
     end % itS
