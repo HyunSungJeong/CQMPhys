@@ -194,7 +194,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
             mkdir(saveFolder);
         end
 
-        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_NumSamples=', sprintf('%d', NumSamples), '.txt'];
+        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_NumSamples=', sprintf('%d', NumSamples), '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep), '.txt'];
         writematrix(Sample, [saveFolder, filesep, FileName], 'Delimiter', ' ');
         
     else
