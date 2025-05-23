@@ -62,13 +62,13 @@ function [E0, E_iter, MPS, Sv] = DMRG_GS(MPO, Nkeep, Nsweep, varargin)
         error('ERR: ''MPO'' must be a cell vector of tensors forming the MPO Hamiltonian');
     end
 
-    if ~isnumeric(Nkeep)
+    if ~isnumeric(Nkeep) || ~isscalar(Nkeep)
         error('ERR: ''Nkeep'' must be a positive integer');
     elseif mod(Nkeep,1) ~= 0 || Nkeep < 1
         error('ERR: ''Nkeep'' must be a positive integer');
     end
 
-    if ~isnumeric(Nsweep)
+    if ~isnumeric(Nsweep) || ~isscalar(Nsweep)
         error('ERR: ''Nsweep'' must be a positive integer');
     elseif mod(Nsweep,1) ~= 0 || Nsweep < 1
         error('ERR: ''Nsweep'' must be a positive integer');

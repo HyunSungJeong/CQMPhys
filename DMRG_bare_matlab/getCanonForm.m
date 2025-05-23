@@ -4,6 +4,7 @@ function [MPS_canon, Sv, dw] = getCanonForm(MPS, idx, varargin)
     % 
     % <Input>
     % MPS : [cell vector] cell vector containing the tensors forming the MPS to be converted to canonical form
+    %
     % idx : [numeric] Index specifying the position of the diamond tensor in the bond canonical form.
     %               The diamond tensor containing the singular values is located between site # idx and site # idx+1
     %           1. idx == 0
@@ -15,18 +16,24 @@ function [MPS_canon, Sv, dw] = getCanonForm(MPS, idx, varargin)
     % 
     % <Option>
     % 'Nkeep', ... : [numeric] Maximum number of singluar values to keep at each SVD
-    %                   (Default: Inf. i.e., no truncation)
+    %                          If empty([]), Nkeep is regarded as infinite
+    %                               (Default: Inf. i.e., no truncation)
+    %
     % 'Skeep', ... : [numeric] Minimum absolute value of the singular value to keep
-    %                   (Default: 10*eps(Sv(1)), where Sv(1) is the maximum singular value
-    %                               i.e., same as the default option of Skeep in the function 'svdTr')
+    %                          If empty([]), Skeep is set as its default value
+    %                               (Default: 10*eps(Sv(1)), where Sv(1) is the maximum singular value
+    %                                           i.e., same as the default option of Skeep in the function 'svdTr')
+    %
     % 'Normalize', ... : [logical] Whether to normalize or not normalize the given MPS
     %                           This option cannot be turned off if idx == 0 or idx == numel(MPS) (i.e., right- or left- canonical)
     %                           (Default: true (normalize))
     %
     % <Output>
     % MPS_canon : [cell vector] cell vector containing the left- and right- normalized tensors forming the MPS in the canonical form
+    %
     % Sv : [numeric vector] Vector containing the diagonal elements(singular values) of the diamond tensor.
     %                       Sorted in descending order
+    %
     % dw : [numeric vector] dw(it) : discarded weights in the SVD between MPS{n} and MPS{n+1}
 
     %% Parse inputs

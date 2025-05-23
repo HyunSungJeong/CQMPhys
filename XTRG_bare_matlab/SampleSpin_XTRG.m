@@ -1,4 +1,4 @@
-function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
+function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  varargin)
     % <Description>
     % Sequentially samples local spin from the ground state of the 
     % quantum XXZ Heisenberg chain obtained by DMRG(2-site update)
@@ -9,16 +9,13 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     % ChainLen : [numeric] The length of the XXZ Heisenberg chain
     %
     % Delta : [numeric] Spin-z interaction of the XXZ Heisenberg chain
+    %
+    % ImagTime : [numeric] The imaginary time(inverse temperature) to sample spin configuration
     % 
     % <Option>
-    % 'Nkeep', ... [numeric] Number of states to keep in DMRG (2-site update)
+    % 'Nkeep', ... [numeric] Number of states to keep in XTRG (2-site update)
     %
-    % 'Nsweep', ... [numeric] Number of sweeps (pairs of right --> left & left --> right sweeps)
-    % 
-    % 'update', ... : [char] '1site' or '2site'. 
-    %                       If '1site', 1-site update DMRG is performed 
-    %                       If '2site', 2-site update DMRG is performed
-    %                           (Default: 2-site update)
+    % 'Nsweep', ... [numeric] Number of sweeps (pairs of right --> left & left --> right sweeps) in XTRG
     %
     % 'SaveFile' : If used, the output is saved as a .txt file instead of a giving it as output variable matlab array output
     %                   (Default: not used)
@@ -194,7 +191,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
             mkdir(saveFolder);
         end
 
-        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_NumSamples=', sprintf('%d', NumSamples), '.txt'];
+        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_NumSamples=', sprintf('%d', NumSamples), '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep) '.txt'];
         writematrix(Sample, [saveFolder, filesep, FileName], 'Delimiter', ' ');
         
     else
