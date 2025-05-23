@@ -165,13 +165,13 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
                 Sample(itS, itN) = 1;
                 Cleft = updateLeft(Cleft, 2, MPS{itN}, Proj_up, 2, MPS{itN});
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : up, Norm = ', sprintf('%.15g', Norm)]);
+                    disp(['Site #', sprintf('%d', itN), ' : up, Norm = ', sprintf('%.5g', Norm)]);
                 end 
             else
                 Sample(itS, itN) = 0;
                 Cleft = updateLeft(Cleft, 2, MPS{itN}, Proj_down, 2, MPS{itN});
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : down, Norm = ', sprintf('%.15g', Norm)]);
+                    disp(['Site #', sprintf('%d', itN), ' : down, Norm = ', sprintf('%.5g', Norm)]);
                 end
             end
         end % itN

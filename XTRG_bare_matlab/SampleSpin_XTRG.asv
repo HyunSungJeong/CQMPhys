@@ -154,9 +154,8 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     Tr_R = cell(ChainLen+1, 1);     % right part of the partial traced density matrix
     Tr_R{end} = 1;
     for itN = ChainLen:-1:1
-        Tr_R{itN} = contract(rho{itN}, 4, 4, Tr_R{itN+1}, 1, 1);
-        Tr_R{itN} = contract(Tr_R{itN}, 3, [1,2], getIdentity(Tr_R{itN}, 1), [1,2]);
-        
+        Tr_R{itN} = contract(rho{itN}, 4, 4, Tr_R{itN+1}, 2, 1);
+        Tr_R{itN} = contract(Tr_R{itN}, 3, [1,2], getIdentity(Tr_R{itN}, 1), 2, [1,2]); 
     end
 
     % Direct sampling
@@ -168,29 +167,29 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
 
         for itN = 1:ChainLen
 
-            Tr = contract(Tr_L, 1, 1, rho{itN}, 4, 3);
-            Tr = contract(Tr, 3, [1,2], getIdentity(Tr, 1), 2, [2,1]);
-            Tr = contract(Tr, 1, 1, Tr_R{itN+1});
+            Tr = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+            Tr = contract(Tr, 4, [2,3], getIdentity(Tr, 2), 2, [2,1]);
+            Tr = contract(Tr, 2, 2, Tr_R{itN+1}, 2, 1);
             Tr_L = Tr_L / Tr;
             
-            Sz_exp = contract(Tr_L, 1, 1, rho{itN}, 4, 3);
-            Sz_exp = contract(Sz_exp, 4, [1,2], Sz, 2, [2,1]);
-            Sz_exp = contract(Sz_exp, 1, 1, Tr_R{itN+1});
+            Sz_exp = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+            Sz_exp = contract(Sz_exp, 4, [2,3], Sz, 2, [2,1]);
+            Sz_exp = contract(Sz_exp, 2, 2, Tr_R{itN+1}, 2, 1);
             Prob_up = Sz_exp + 1/2;
            
             if rand() < Prob_up
                 Sample(itS, itN) = 1;
-                Tr_L = contract(Tr_L, 1, 1, rho{itS}, 4, 3);
-                Tr_L = contract(Tr_L, 3, [1,2], Proj_up, 2, [2,1]);
+                Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+                Tr_L = contract(Tr_L, 4, [2,3], Proj_up, 2, [2,1]);
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : up, Norm = ', sprintf('%.15g', Norm)]);
+                    disp(['Site #', sprintf('%d', itN), ' : up']);
                 end 
             else
                 Sample(itS, itN) = 0;
-                Tr_L = contract(Tr_L, 1, 1, rho{itS}, 4, 3);
-                Tr_L = contract(Tr_L, 3, [1,2], Proj_down, 2, [2,1]);
+                Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+                Tr_L = contract(Tr_L, 4, [2,3], Proj_down, 2, [2,1]);
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : down, Norm = ', sprintf('%.15g', Norm)]);
+                    disp(['Site #', sprintf('%d', itN), ' : down', '_Tr = ', sprintf('%.')]);
                 end
             end
         end % itN
