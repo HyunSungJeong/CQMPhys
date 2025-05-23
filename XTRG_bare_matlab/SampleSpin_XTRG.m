@@ -182,14 +182,14 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
                 Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
                 Tr_L = contract(Tr_L, 4, [2,3], Proj_up, 2, [2,1]);
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : up, Norm = ', sprintf('%.15g', Norm)]);
+                    disp(['Site #', sprintf('%d', itN), ' : up']);
                 end 
             else
                 Sample(itS, itN) = 0;
                 Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
                 Tr_L = contract(Tr_L, 4, [2,3], Proj_down, 2, [2,1]);
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : down, Norm = ', sprintf('%.15g', Norm)]);
+                    disp(['Site #', sprintf('%d', itN), ' : down']);
                 end
             end
         end % itN
