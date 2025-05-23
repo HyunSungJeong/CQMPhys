@@ -1,7 +1,7 @@
-function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  varargin)
+function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  varargin)
     % <Description>
-    % Sequentially samples local spin from the ground state of the 
-    % quantum XXZ Heisenberg chain obtained by DMRG(2-site update)
+    % Samples local spin-z from the low-temperature density matrix of the 
+    % spin-1/2 XXZ Heisenberg chain obtained by XTRG
     %
     % <Input>
     % NumSamples : [numeric] Number of spin configurations to sample
@@ -10,12 +10,17 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  var
     %
     % Delta : [numeric] Spin-z interaction of the XXZ Heisenberg chain
     %
-    % ImagTime : [numeric] The imaginary time(inverse temperature) to sample spin configuration
+    % SampleTau : [numeric] The imaginary time(inverse temperature) to sample spin configuration
     % 
     % <Option>
-    % 'Nkeep', ... [numeric] Number of states to keep in XTRG (2-site update)
+    % 'Nkeep', ... : [numeric] Number of states to keep in XTRG (2-site update)
+    %                   (Default: 100)
     %
-    % 'Nsweep', ... [numeric] Number of sweeps (pairs of right --> left & left --> right sweeps) in XTRG
+    % 'Nsweep', ... : [numeric] Number of sweeps (pairs of right --> left & left --> right sweeps) in XTRG
+    %                   (Default: 10)
+    %
+    % 'tau0', ... : [numeric] The imaginary time to start XTRG (must be much smaller than tau0)
+    %                   (Default : 0.01)
     %
     % 'SaveFile' : If used, the output is saved as a .txt file instead of a giving it as output variable matlab array output
     %                   (Default: not used)
@@ -54,12 +59,18 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  var
         error('ERR: ''Delta'' must be a single real number');
     end
 
+    if ~isnumeric(SampleTau) || ~isscalar(SampleTau)
+        error('ERR: ''SampleTau'' must be a number');
+    elseif SampleTau <= 0
+        error('ERR: ''SampleTau'' must be positive');
+    end
+
     %% Parse options
 
     % default options
     Nkeep = 100;
     Nsweep = 10;
-    update = '2site';
+    tau0 = 0.01;
     SaveFile = false;
     display = false;
 
@@ -85,15 +96,16 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  var
                     varargin(1:2) = [];
                 end
 
-            case 'update'
-                if ~ismember(varargin{2}, {'1site', '2site'})
-                    if ischar(varargin{2})
-                        error(['ERR: Unknown update option ''',varargin{2},'''']);
-                    else
-                        error('ERR: Unknown update option');
-                    end
+            case 'tau0'
+                if ~isnumeric(varargin{2}) || ~isscalar(varargin{2})
+                    error('ERR: ''tau0'' must be a positive integer');
+                elseif mod(varargin{2},1) ~= 0 || varargin{2} < 1
+                    error('ERR: ''tau0'' must be a positive integer');
                 else
-                    updateOpt = varargin{2};
+                    if varargin{2} > 0.1
+                        disp('WRN: tau0 = ', sprintf('%.15g', varargin{2}), ' is rather large, and can result in numerical errors in XTRG calculations');
+                    end
+                    tau0 = varargin{2};
                     varargin(1:2) = [];
                 end
 
@@ -119,12 +131,12 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  var
 
     MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for XXZ Heisenberg chain
 
-    disp(['2-site DMRG with Nkeep = ', sprintf('%d', Nkeep), ' (Init : IterDiag)']);     % Run DMRG
-    [~, ~, MPS, ~] = DMRG_GS(MPO, Nkeep, Nsweep, 'MPSinit', 'IterDiag', 'update', update, '-v');
+    disp(['XTRG with Nkeep = ', sprintf('%d', Nkeep), ', Nsweep = ', sprintf('%d', Nsweep)]);    % Run XTRG
+    [rho, ~, ~] = run_XTRG(MPO, tau0, Nkeep, Nsweep, SampleTau);
     
     disp('=======================================================================');
 
-    %% Sample from ground state MPS
+    %% Sample from low-temp density matrix
 
     % define local operators
     Sz = [1,0;0,-1]/2;      % spin-z operator
@@ -139,32 +151,43 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  var
     % define array to save samples
     Sample = zeros(NumSamples, 15);
 
-    % convert MPS to right canonical form
-    [MPS, ~, ~] = getCanonForm(MPS, ChainLen, 'Nkeep', Nkeep); 
+    Tr_R = cell(ChainLen+1, 1);     % right part of the partial traced density matrix
+    Tr_R{end} = 1;
+    for itN = ChainLen:-1:1
+        Tr_R{itN} = contract(rho{itN}, 4, 4, Tr_R{itN+1}, 2, 1);
+        Tr_R{itN} = contract(Tr_R{itN}, 3, [1,2], getIdentity(Tr_R{itN}, 1), 2, [1,2]); 
+    end
 
     % Direct sampling
     for itS = 1:NumSamples
-        Cleft = 1;
+
+        Tr_L = 1;   % left part of the partial traced density matrix
+
         disptime(['Sampling #', sprintf('%d', itS), '/', sprintf('%d', NumSamples)]);
 
         for itN = 1:ChainLen
 
-            Norm = contract(Cleft, 2, [1,2], getIdentity(Cleft, 2), 2, [1,2]);
-            Cleft = Cleft / Norm;
+            Tr = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+            Tr = contract(Tr, 4, [2,3], getIdentity(Tr, 2), 2, [2,1]);
+            Tr = contract(Tr, 2, 2, Tr_R{itN+1}, 2, 1);
+            Tr_L = Tr_L / Tr;
             
-            Sz_exp = updateLeft(Cleft, 2, MPS{itN}, Sz, 2, MPS{itN});
-            Sz_exp = contract(Sz_exp, 2, [1,2], getIdentity(Sz_exp, 2), 2, [1,2]);
+            Sz_exp = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+            Sz_exp = contract(Sz_exp, 4, [2,3], Sz, 2, [2,1]);
+            Sz_exp = contract(Sz_exp, 2, 2, Tr_R{itN+1}, 2, 1);
             Prob_up = Sz_exp + 1/2;
            
             if rand() < Prob_up
                 Sample(itS, itN) = 1;
-                Cleft = updateLeft(Cleft, 2, MPS{itN}, Proj_up, 2, MPS{itN});
+                Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+                Tr_L = contract(Tr_L, 4, [2,3], Proj_up, 2, [2,1]);
                 if display
                     disp(['Site #', sprintf('%d', itN), ' : up, Norm = ', sprintf('%.15g', Norm)]);
                 end 
             else
                 Sample(itS, itN) = 0;
-                Cleft = updateLeft(Cleft, 2, MPS{itN}, Proj_down, 2, MPS{itN});
+                Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
+                Tr_L = contract(Tr_L, 4, [2,3], Proj_down, 2, [2,1]);
                 if display
                     disp(['Site #', sprintf('%d', itN), ' : down, Norm = ', sprintf('%.15g', Norm)]);
                 end
@@ -179,20 +202,9 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, ImagTime,  var
             mkdir(dataFolder);
         end
 
-        if Delta <= -1  % ferromagnetic
-            saveFolder = [dataFolder, filesep, 'FM'];
-        elseif Delta >= 1   % antiferromagnetic
-            saveFolder = [dataFolder, filesep, 'AFM'];
-        else    % Luttinger liquid
-            saveFolder = [dataFolder, filesep, 'LL'];
-        end
-
-        if ~exist(saveFolder, 'dir')
-            mkdir(saveFolder);
-        end
-
-        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_NumSamples=', sprintf('%d', NumSamples), '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep), '.txt'];
-        writematrix(Sample, [saveFolder, filesep, FileName], 'Delimiter', ' ');
+        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_SampleTau=', sprintf('%.15g', SampleTau), ...
+                        '_NumSamples=', sprintf('%d', NumSamples), '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep), '.txt'];
+        writematrix(Sample, [dataFolder, filesep, FileName], 'Delimiter', ' ');
         
     else
         varargout{1} = Sample;
