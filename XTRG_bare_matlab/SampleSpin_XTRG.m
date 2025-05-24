@@ -129,7 +129,7 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
 
     %% Run DMRG
 
-    maxNumCompThreads(4);
+    maxNumCompThreads(2);
 
     MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for spin-1/2 XXZ Heisenberg chain
 
@@ -199,6 +199,9 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     end % itS
 
     if SaveFile
+
+        Nstep = round(log2(SampleTau)-log2(tau0));
+        SampleTau = tau0*(2^Nstep);
 
         dataFolder = [fileparts(mfilename('fullpath')), filesep, 'SampleData'];
         if ~exist(dataFolder, 'dir')
