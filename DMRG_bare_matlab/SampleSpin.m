@@ -122,6 +122,8 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
 
     %% Run DMRG
 
+    maxNumCompThreads(3);
+
     MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for XXZ Heisenberg chain
 
     disp(['2-site DMRG with Nkeep = ', sprintf('%d', Nkeep), ' (Init : IterDiag)']);     % Run DMRG
