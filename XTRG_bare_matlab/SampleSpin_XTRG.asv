@@ -136,7 +136,7 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
 
     %% Run DMRG
 
-    maxNumCompThreads(4);
+    maxNumCompThreads(2);
 
     MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for spin-1/2 XXZ Heisenberg chain
 
@@ -233,10 +233,8 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
             mkdir(rhoFolder);
        end
 
-       FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_SampleTau=', ...
-                        sprintf('%.15g', SampleTau), '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep), '.mat'];
-
-       save([rhoFolder, filesep, FileName], 'rho');
+       FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_SampleTau=', sprintf('%.15g', ...
+                        '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep), '.txt'];
 
 
     end
