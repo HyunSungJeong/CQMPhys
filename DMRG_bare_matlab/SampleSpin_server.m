@@ -20,8 +20,7 @@ function SampleSpin_server(parfn, varargin)
 
         STG = ['/data/',getenv('USER'),'/DMRG_SpinSamples/',JobName, '_Nkeep=', sprintf('%.15g',Nkeep), '_Nsweep=', sprintf('%.15g',Nsweep)];
 
-        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_NumSamples=', ...
-                        sprintf('%d', NumSamples), '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep), '.txt'];
+        FileName = 'DMRG_SpinSample.txt';
 
         writematrix(Sample, [STG, filesep, FileName], 'Delimiter', ' ');
 

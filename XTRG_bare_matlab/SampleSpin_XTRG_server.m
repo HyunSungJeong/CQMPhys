@@ -1,4 +1,4 @@
-function SampleSpin_server(parfn, varargin)
+function SampleSpin_XTRG_server(parfn, varargin)
 
     try % in case of bug
 
@@ -16,16 +16,15 @@ function SampleSpin_server(parfn, varargin)
         disp2(['SLURM_ARRAY_TASK_ID : ', getenv('SLURM_ARRAY_TASK_ID')]);
         disp2(['LOG_FILE : ', getenv('LOG_FILE')]);
     
-        [Sample, MPS_GS] = SampleSpin(NumSamples, ChainLen, Delta, 'Nkeep', Nkeep, 'Nsweep', Nsweep, 'getMPS');
+        [Sample, rho] = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau, 'Nkeep', Nkeep, 'Nsweep', Nsweep);
 
-        STG = ['/data/',getenv('USER'),'/DMRG_SpinSamples/',JobName, '_Nkeep=', sprintf('%.15g',Nkeep), '_Nsweep=', sprintf('%.15g',Nsweep)];
+        STG = ['/data/',getenv('USER'),'/XTRG_SpinSamples/',JobName];
 
-        FileName = ['Delta=', sprintf('%.15g',Delta), '_L=', sprintf('%d',ChainLen), '_NumSamples=', ...
-                        sprintf('%d', NumSamples), '_Nkeep=', sprintf('%d',Nkeep), '_Nsweep=', sprintf('%d',Nsweep), '.txt'];
+        FileName = ['XTRG_SpinSample_NumSamples=', sprintf('%d',NumSamples), '.txt'];
 
         writematrix(Sample, [STG, filesep, FileName], 'Delimiter', ' ');
 
-        save([STG,'/MPS_GS.mat'], 'MPS_GS');
+        save([STG,'/rho.mat'], 'rho');
         
 
     catch Err

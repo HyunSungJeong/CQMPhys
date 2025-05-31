@@ -1,4 +1,4 @@
-function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  varargin)
+function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau, varargin)
     % <Description>
     % Samples local spin-z from the low-temperature density matrix of the 
     % spin-1/2 XXZ Heisenberg chain obtained by XTRG
@@ -39,6 +39,8 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     %                       1 for spin up and 0 for spin down
     %                       Phase label is 2 for ferromagnetic, 3 for Luttinger liquid, and 5 for antiferromagnetic phase
     %                       If 'SaveFile' option is used, this sample is saved in the '\SampleData' folder as a .txt file
+    %
+    % rho : [cell array] MPO representing the low-temperature density matrix at imaginary time 'SampleTau'
 
     %% Parse inputs
     

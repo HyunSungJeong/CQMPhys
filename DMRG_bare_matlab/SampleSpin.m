@@ -37,6 +37,8 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     %                       1 for spin up and 0 for spin down
     %                       Phase label is 2 for ferromagnetic, 3 for Luttinger liquid, and 5 for antiferromagnetic phase
     %                       If 'SaveFile' option is used, this sample is saved in the '\SampleData' folder as a .txt file
+    %
+    % MPS_GS : [cell array] The MPS of the ground state of the XXZ Heisenberg chain
 
     %% Parse inputs
     
@@ -155,7 +157,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     Sample = zeros(NumSamples, ChainLen);
 
     % convert MPS to right canonical form
-    [MPS, ~, ~] = getCanonForm(MPS, ChainLen, 'Nkeep', Nkeep); 
+    [MPS, ~, ~] = getCanonForm(MPS, 0, 'Nkeep', Nkeep); 
 
     % Direct sampling
     for itS = 1:NumSamples
