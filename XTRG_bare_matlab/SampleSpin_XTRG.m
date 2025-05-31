@@ -25,6 +25,9 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     % 'SaveFile' : If used, the output is saved as a .txt file instead of a giving it as output variable matlab array output
     %                   (Default: not used)
     %
+    % 'getRho' : If used, the density matrix at imaginary time 'SampleTau' is saved as a .mat file
+    %                   (Default: not used)
+    %
     % 'SaveRho' : If used, the density matrix at imaginary time 'SampleTau' is saved as a .mat file
     % 
     % '-v' : If used, the sampling results are displayed
@@ -74,6 +77,7 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     Nsweep = 10;
     tau0 = 0.01;
     SaveFile = false;
+    getRho = false;
     SaveRho = false;
     display = false;
 
@@ -106,7 +110,7 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
                     error('ERR: ''tau0'' must be a positive integer');
                 else
                     if varargin{2} > 0.1
-                        disp('WRN: tau0 = ', sprintf('%.15g', varargin{2}), ' is rather large, and can result in numerical errors in XTRG calculations');
+                        disp2('WRN: tau0 = ', sprintf('%.15g', varargin{2}), ' is rather large, and can result in numerical errors in XTRG calculations');
                     end
                     tau0 = varargin{2};
                     varargin(1:2) = [];
@@ -114,6 +118,10 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
 
             case 'SaveFile'
                 SaveFile = true;
+                varargin(1) = [];
+
+            case 'getRho'
+                getRho = true;
                 varargin(1) = [];
 
             case 'SaveRho'
@@ -141,10 +149,10 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for spin-1/2 XXZ Heisenberg chain
 
     % Run XTRG
-    disp(['XTRG with Nkeep = ', sprintf('%d', Nkeep), ', Nsweep = ', sprintf('%d', Nsweep)]);
+    disp2(['XTRG with Nkeep = ', sprintf('%d', Nkeep), ', Nsweep = ', sprintf('%d', Nsweep)]);
     [rho, ~, ~] = run_XTRG(MPO, tau0, Nkeep, Nsweep, SampleTau);
     
-    disp('=======================================================================');
+    disp2('=======================================================================');
 
     %% Sample from low-temp density matrix
 
@@ -159,7 +167,7 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     Proj_down = [0,0;0,1];  % projector to the Sz = -1/2 subspace
 
     % define array to save samples
-    Sample = zeros(NumSamples, 15);
+    Sample = zeros(NumSamples, ChainLen);
 
     Tr_R = cell(ChainLen+1, 1);     % right part of the partial traced density matrix
     Tr_R{end} = 1;
@@ -192,14 +200,14 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
                 Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
                 Tr_L = contract(Tr_L, 4, [2,3], Proj_up, 2, [2,1]);
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : up', ', Tr = ', sprintf('%.4g',Tr)]);
+                    disp2(['Site #', sprintf('%d', itN), ' : up', ', Tr = ', sprintf('%.4g',Tr)]);
                 end 
             else
                 Sample(itS, itN) = 0;
                 Tr_L = contract(Tr_L, 2, 2, rho{itN}, 4, 3);
                 Tr_L = contract(Tr_L, 4, [2,3], Proj_down, 2, [2,1]);
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : down', ', Tr = ', sprintf('%.4g',Tr)]);
+                    disp2(['Site #', sprintf('%d', itN), ' : down', ', Tr = ', sprintf('%.4g',Tr)]);
                 end
             end
         end % itN
@@ -223,6 +231,9 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
         
     else
         varargout{1} = Sample;
+        if getRho
+            varargout{2} = rho;
+        end
     end
 
     if SaveRho

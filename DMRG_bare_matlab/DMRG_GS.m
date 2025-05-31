@@ -187,7 +187,7 @@ function [E0, E_iter, MPS, Sv] = DMRG_GS(MPO, Nkeep, Nsweep, varargin)
 
     if isempty(MPSinit_Opt) || isequal(MPSinit_Opt, 'Rand')
         if margin_specified
-            disp('WRN: In the current option of initializing MPS, ''margin'' option is meaningless');
+            disp2('WRN: In the current option of initializing MPS, ''margin'' option is meaningless');
         end
     end
 

@@ -143,8 +143,7 @@ function Anderson_8flav_NRG(parfn,varargin)
         Hmu = contract(A0,'!2*',{Hmu,'!1',A0});         % Hmu in the K00 space
         H0 = HU + Hmu;                                  % impurity Hamiltonian
 
-        %STG = ['/data/',getenv('USER'),'/8flav/',JobName,'_Nkeep=',sprintf('%.15g',Nkeep)];
-        STG = ['/project/',getenv('USER'),'/8flav/',JobName,'_Nkeep=',sprintf('%.15g',Nkeep)];      % temporary storage
+        STG = ['/data/',getenv('USER'),'/8flav/',JobName,'_Nkeep=',sprintf('%.15g',Nkeep)];
 
         nrgdata = cell(1,nz);
 

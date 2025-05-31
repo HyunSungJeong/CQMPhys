@@ -25,6 +25,9 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     % 'SaveFile' : If used, the output is saved as a .txt file instead of a giving it as output variable matlab array output
     %                   (Default: not used)
     % 
+    % 'getMPS' : If used, the MPS of the ground state is returned as an output variable
+    %                   (Default: not used)
+    % 
     % '-v' : If used, the sampling results are displayed
     %                   (Default: not used)
     %
@@ -66,6 +69,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     Nsweep = 10;
     update = '2site';
     SaveFile = false;
+    getMPS = false;
     display = false;
 
     while ~isempty(varargin)
@@ -106,6 +110,10 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
                 SaveFile = true;
                 varargin(1) = [];
 
+            case 'getMPS'
+                getMPS = true;
+                varargin(1) = [];
+
             case '-v'
                 display = true;
                 varargin(1) = [];
@@ -126,10 +134,10 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
 
     MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for XXZ Heisenberg chain
 
-    disp(['2-site DMRG with Nkeep = ', sprintf('%d', Nkeep), ' (Init : IterDiag)']);     % Run DMRG
+    disp2(['2-site DMRG with Nkeep = ', sprintf('%d', Nkeep), ' (Init : IterDiag)']);     % Run DMRG
     [~, ~, MPS, ~] = DMRG_GS(MPO, Nkeep, Nsweep, 'MPSinit', 'IterDiag', 'update', update, '-v');
     
-    disp('=======================================================================');
+    disp2('=======================================================================');
 
     %% Sample from ground state MPS
 
@@ -144,7 +152,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     Proj_down = [0,0;0,1];  % projector to the Sz = -1/2 subspace
 
     % define array to save samples
-    Sample = zeros(NumSamples, 15);
+    Sample = zeros(NumSamples, ChainLen);
 
     % convert MPS to right canonical form
     [MPS, ~, ~] = getCanonForm(MPS, ChainLen, 'Nkeep', Nkeep); 
@@ -167,13 +175,13 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
                 Sample(itS, itN) = 1;
                 Cleft = updateLeft(Cleft, 2, MPS{itN}, Proj_up, 2, MPS{itN});
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : up, Norm = ', sprintf('%.5g', Norm)]);
+                    disp2(['Site #', sprintf('%d', itN), ' : up, Norm = ', sprintf('%.5g', Norm)]);
                 end 
             else
                 Sample(itS, itN) = 0;
                 Cleft = updateLeft(Cleft, 2, MPS{itN}, Proj_down, 2, MPS{itN});
                 if display
-                    disp(['Site #', sprintf('%d', itN), ' : down, Norm = ', sprintf('%.5g', Norm)]);
+                    disp2(['Site #', sprintf('%d', itN), ' : down, Norm = ', sprintf('%.5g', Norm)]);
                 end
             end
         end % itN
@@ -203,6 +211,9 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
         
     else
         varargout{1} = Sample;
+        if getMPS
+            varargout{2} = MPS;
+        end
     end
 
 end

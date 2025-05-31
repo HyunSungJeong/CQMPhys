@@ -161,21 +161,11 @@ function Anderson_8flav_par(varargin)
     
     end   % option
   
-    %{
     for it = 1:num_jobs
       if ~exist(['/data/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)],'dir')
         mkdir(['/data/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)]);
       end
     end
-    %}
-
-    % temporarily change storage to /project
-    for it = 1:num_jobs
-      if ~exist(['/project/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)],'dir')
-        mkdir(['/project/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)]);
-      end
-    end
-
 
     if all(Hyb == Hyb(end)) && num_jobs ~= 1
       Hybs = ['[',sprintf('%.15g',Hyb(end)),']x',sprintf('%d',num_jobs)];
