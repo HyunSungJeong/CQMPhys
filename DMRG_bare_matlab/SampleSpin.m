@@ -147,7 +147,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     Sample = zeros(NumSamples, ChainLen);
 
     % convert MPS to right canonical form
-    [MPS, ~, ~] = getCanonForm(MPS, ChainLen, 'Nkeep', Nkeep); 
+    [MPS, ~, ~] = getCanonForm(MPS, 0, 'Nkeep', Nkeep); 
 
     % Direct sampling
     for itS = 1:NumSamples
@@ -203,6 +203,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
         
     else
         varargout{1} = Sample;
+        varargout{2} = MPS;
     end
 
 end
