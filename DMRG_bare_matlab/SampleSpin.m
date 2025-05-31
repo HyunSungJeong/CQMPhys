@@ -144,7 +144,7 @@ function varargout = SampleSpin(NumSamples, ChainLen, Delta, varargin)
     Proj_down = [0,0;0,1];  % projector to the Sz = -1/2 subspace
 
     % define array to save samples
-    Sample = zeros(NumSamples, 15);
+    Sample = zeros(NumSamples, ChainLen);
 
     % convert MPS to right canonical form
     [MPS, ~, ~] = getCanonForm(MPS, ChainLen, 'Nkeep', Nkeep); 

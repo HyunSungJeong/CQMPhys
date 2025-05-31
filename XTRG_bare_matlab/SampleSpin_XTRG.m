@@ -159,7 +159,7 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau,  va
     Proj_down = [0,0;0,1];  % projector to the Sz = -1/2 subspace
 
     % define array to save samples
-    Sample = zeros(NumSamples, 15);
+    Sample = zeros(NumSamples, ChainLen);
 
     Tr_R = cell(ChainLen+1, 1);     % right part of the partial traced density matrix
     Tr_R{end} = 1;
