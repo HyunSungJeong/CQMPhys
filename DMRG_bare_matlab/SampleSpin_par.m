@@ -20,7 +20,7 @@ function SampleSpin_par(varargin)
     PE = 7;                 % # of cores to be occupied in clusters
     Nkeep = 300;
     Nsweep = 10;
-    ChainLen = 300;
+    ChainLen = 500;
     NumSamples = 10000;
     Delta = ones(1,num_jobs);
   
