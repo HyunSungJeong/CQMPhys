@@ -18,14 +18,15 @@ function SampleSpin_server(parfn, varargin)
     
         [Sample, MPS_GS] = SampleSpin(NumSamples, ChainLen, Delta, 'Nkeep', Nkeep, 'Nsweep', Nsweep, 'getMPS');
 
-        STG = ['/data/',getenv('USER'),'/DMRG_SpinSamples/',JobName, '_Nkeep=', sprintf('%.15g',Nkeep), '_Nsweep=', sprintf('%.15g',Nsweep)];
+        SampleName = ['DMRG_', JobName, '.txt'];
+        MPS_GS_Name = ['MPS_GS_', JobName, '.mat'];
 
-        FileName = 'DMRG_SpinSample.txt';
+        SamplePath = ['/data/hyunsung/DMRG_XXZ/SampleData/', SampleName];
+        MPS_GS_Path = ['/data/hyunsung/DMRG_XXZ/MPSdata/', MPS_GS_Name];
 
-        writematrix(Sample, [STG, filesep, FileName], 'Delimiter', ' ');
+        writematrix(Sample, SamplePath, 'Delimiter', ' ');
 
-        save([STG,'/MPS_GS.mat'], 'MPS_GS');
-        
+        save(MPS_GS_Path, 'MPS_GS');
 
     catch Err
         disp2(getReport(Err));

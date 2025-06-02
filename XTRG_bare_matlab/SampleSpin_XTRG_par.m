@@ -18,9 +18,9 @@ function SampleSpin_par(varargin)
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
     h_vmem = 80;            % Memory (in GB) to be occupied in clusters
     PE = 8;                 % # of cores to be occupied in clusters
-    Nkeep = 300;
+    Nkeep = 150;
     Nsweep = 10;
-    ChainLen = 1000;
+    ChainLen = 300;
     NumSamples = 10000;
     Delta = ones(1,num_jobs);
     SampleTau = ones(1,num_jobs);
@@ -44,19 +44,14 @@ function SampleSpin_par(varargin)
       SampleTau(it) = intmp;
  
       JobName = ['Delta=',sprintf('%.15g',partot(it).Delta), ...
-                    '_SampleTau=',sprintf('%.15g',partot(it).SampleTau), ...
-                        '_Nkeep=',sprintf('%.15g',Nkeep), ...
-                            '_Nsweep=',sprintf('%.15g',Nsweep)];     
-  
+                    '_ChainLen=',sprintf('%.15g',ChainLen), ...
+                      '_NumSamples=',sprintf('%.15g',NumSamples), ...
+                        '_SampleTau=',sprintf('%.15g',partot(it).SampleTau), ...
+                            '_Nkeep=',sprintf('%.15g',Nkeep), ...
+                                '_Nsweep=',sprintf('%.15g',Nsweep)];     
+      
       partot(it).JobName = JobName;
   
-    end
-  
-    for it = (1:num_jobs)
-        dataFolder = ['/data/',getenv('USER'),'/XTRG_SpinSamples/',partot(it).JobName];
-        if ~exist(dataFolder, 'dir')
-            mkdir(dataFolder);
-        end
     end
 
 
@@ -84,7 +79,7 @@ function SampleSpin_par(varargin)
       NumSamples_list = ['[',NumSamples_list(1:end-1),']'];
     end
   
-    parfn = ['DMRG_SampleSpin_par_Delta=', Deltas, '_NumSamples=', NumSamples_list, '_SampleTau=', SampleTaus];
+    parfn = ['XTRG_SampleSpin_par_Delta=', Deltas, '_NumSamples=', NumSamples_list, '_SampleTau=', SampleTaus];
   
     dispstruct(partot);
     parfn = [go('mu/Para/'), parfn, '.mat'];

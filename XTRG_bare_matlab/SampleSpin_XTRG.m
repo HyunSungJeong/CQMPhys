@@ -146,8 +146,6 @@ function varargout = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau, var
 
     %% Run DMRG
 
-    maxNumCompThreads(4);
-
     MPO = getMPO(ChainLen, 'XXZ', Delta);   % construct MPO for spin-1/2 XXZ Heisenberg chain
 
     % Run XTRG

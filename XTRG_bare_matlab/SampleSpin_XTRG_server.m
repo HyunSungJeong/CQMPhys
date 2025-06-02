@@ -16,15 +16,17 @@ function SampleSpin_XTRG_server(parfn, varargin)
         disp2(['SLURM_ARRAY_TASK_ID : ', getenv('SLURM_ARRAY_TASK_ID')]);
         disp2(['LOG_FILE : ', getenv('LOG_FILE')]);
     
-        [Sample, rho] = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau, 'Nkeep', Nkeep, 'Nsweep', Nsweep);
+        [Sample, rho] = SampleSpin_XTRG(NumSamples, ChainLen, Delta, SampleTau, 'Nkeep', Nkeep, 'Nsweep', Nsweep, 'getRho');
 
-        STG = ['/data/',getenv('USER'),'/XTRG_SpinSamples/',JobName];
+        SampleName = ['XTRG_', JobName, '.txt'];
+        Rho_Name = ['Rho_', JobName, '.mat'];
 
-        FileName = ['XTRG_SpinSample_NumSamples=', sprintf('%d',NumSamples), '.txt'];
+        SamplePath = ['/data/hyunsung/XTRG_XXZ/SampleData/', SampleName];
+        Rho_Path = ['/data/hyunsung/XTRG_XXZ/MPOdata/', Rho_Name];
 
-        writematrix(Sample, [STG, filesep, FileName], 'Delimiter', ' ');
+        writematrix(Sample, SamplePath, 'Delimiter', ' ');
 
-        save([STG,'/rho.mat'], 'rho');
+        save(Rho_Path, 'rho');
         
 
     catch Err

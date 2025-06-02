@@ -16,11 +16,11 @@ function SampleSpin_par(varargin)
     num_jobs = input('>>> ');
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    h_vmem = 80;            % Memory (in GB) to be occupied in clusters
-    PE = 8;                 % # of cores to be occupied in clusters
+    h_vmem = 60;            % Memory (in GB) to be occupied in clusters
+    PE = 7;                 % # of cores to be occupied in clusters
     Nkeep = 300;
     Nsweep = 10;
-    ChainLen = 1000;
+    ChainLen = 300;
     NumSamples = 10000;
     Delta = ones(1,num_jobs);
   
@@ -38,19 +38,14 @@ function SampleSpin_par(varargin)
       Delta(it) = intmp;
  
       JobName = ['Delta=',sprintf('%.15g',partot(it).Delta), ...
-                    '_NumSamples=',sprintf('%.15g',NumSamples)];     
+                    '_ChainLen=',sprintf('%.15g',ChainLen), ...
+                      '_NumSamples=',sprintf('%.15g',NumSamples), ...
+                        '_Nkeep=',sprintf('%.15g',Nkeep), ...
+                          '_Nsweep=',sprintf('%.15g',Nsweep)];     
   
       partot(it).JobName = JobName;
   
     end
-  
-    for it = (1:num_jobs)
-        dataFolder = ['/data/',getenv('USER'),'/DMRG_SpinSamples/',partot(it).JobName, '_Nkeep=', sprintf('%.15g',Nkeep), '_Nsweep=', sprintf('%.15g',Nsweep)];
-        if ~exist(dataFolder, 'dir')
-            mkdir(dataFolder);
-        end
-    end
-
 
     if all(Delta == Delta(end)) && num_jobs ~= 1
       Deltas = ['[',sprintf('%.15g',Delta(end)),']x',sprintf('%d',num_jobs)];
