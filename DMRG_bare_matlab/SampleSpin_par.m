@@ -20,7 +20,7 @@ function SampleSpin_par(varargin)
     PE = 7;                 % # of cores to be occupied in clusters
     Nkeep = 300;
     Nsweep = 10;
-    ChainLen = 500;
+    ChainLen = 100;
     NumSamples = 10000;
     Delta = ones(1,num_jobs);
   
@@ -55,15 +55,7 @@ function SampleSpin_par(varargin)
       Deltas = ['[',Deltas(1:end-1),']'];
     end
   
-    if all(NumSamples == NumSamples(end)) && num_jobs ~= 1
-      NumSamples_list = ['[',sprintf('%.15g',NumSamples(end)),']x',sprintf('%d',num_jobs)];
-    else
-      NumSamples_list = cellfun(@(x) [sprintf('%.15g',partot(x).NumSamples),','],num2cell(1:num_jobs),'UniformOutput',false);
-      NumSamples_list = cell2mat(NumSamples_list);
-      NumSamples_list = ['[',NumSamples_list(1:end-1),']'];
-    end
-  
-    parfn = ['DMRG_SampleSpin_par_Delta=',Deltas,'_NumSamples=',NumSamples_list];
+    parfn = ['DMRG_SampleSpin_par_Delta=', Deltas, '_NumSamples=', sprintf('%d', NumSamples), '_ChainLen=', sprintf('%d', ChainLen)];
   
     dispstruct(partot);
     parfn = [go('mu/Para/'), parfn, '.mat'];

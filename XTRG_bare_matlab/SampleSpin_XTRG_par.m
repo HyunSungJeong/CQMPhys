@@ -16,11 +16,11 @@ function SampleSpin_par(varargin)
     num_jobs = input('>>> ');
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    h_vmem = 80;            % Memory (in GB) to be occupied in clusters
-    PE = 8;                 % # of cores to be occupied in clusters
-    Nkeep = 150;
+    h_vmem = 60;            % Memory (in GB) to be occupied in clusters
+    PE = 6;                 % # of cores to be occupied in clusters
+    Nkeep = 300;
     Nsweep = 10;
-    ChainLen = 300;
+    ChainLen = 100;
     NumSamples = 10000;
     Delta = ones(1,num_jobs);
     SampleTau = ones(1,num_jobs);
@@ -48,7 +48,7 @@ function SampleSpin_par(varargin)
                       '_NumSamples=',sprintf('%.15g',NumSamples), ...
                         '_SampleTau=',sprintf('%.15g',partot(it).SampleTau), ...
                             '_Nkeep=',sprintf('%.15g',Nkeep), ...
-                                '_Nsweep=',sprintf('%.15g',Nsweep)];     
+                              '_Nsweep=',sprintf('%.15g',Nsweep)];     
       
       partot(it).JobName = JobName;
   
@@ -71,15 +71,7 @@ function SampleSpin_par(varargin)
       SampleTaus = ['[',SampleTaus(1:end-1),']'];
     end
   
-    if all(NumSamples == NumSamples(end)) && num_jobs ~= 1
-      NumSamples_list = ['[',sprintf('%.15g',NumSamples(end)),']x',sprintf('%d',num_jobs)];
-    else
-      NumSamples_list = cellfun(@(x) [sprintf('%.15g',partot(x).NumSamples),','],num2cell(1:num_jobs),'UniformOutput',false);
-      NumSamples_list = cell2mat(NumSamples_list);
-      NumSamples_list = ['[',NumSamples_list(1:end-1),']'];
-    end
-  
-    parfn = ['XTRG_SampleSpin_par_Delta=', Deltas, '_NumSamples=', NumSamples_list, '_SampleTau=', SampleTaus];
+    parfn = ['XTRG_SampleSpin_par_Delta=', Deltas, '_NumSamples=', sprintf('%d',NumSamples), '_SampleTau=', SampleTaus, '_ChainLen=', sprintf('%d', ChainLen)];
   
     dispstruct(partot);
     parfn = [go('mu/Para/'), parfn, '.mat'];
