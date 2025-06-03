@@ -18,7 +18,7 @@ function SampleSpin_par(varargin)
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
     h_vmem = 60;            % Memory (in GB) to be occupied in clusters
     PE = 6;                 % # of cores to be occupied in clusters
-    Nkeep = 300;
+    Nkeep = 120;
     Nsweep = 10;
     ChainLen = 100;
     NumSamples = 10000;
