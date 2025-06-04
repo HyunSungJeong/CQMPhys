@@ -16,8 +16,8 @@ function getSpinCorr_par(varargin)
     num_jobs = input('>>> ');
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    h_vmem = 60;            % Memory (in GB) to be occupied in clusters
-    PE = 7;                 % # of cores to be occupied in clusters
+    h_vmem = 30;            % Memory (in GB) to be occupied in clusters
+    PE = 3;                 % # of cores to be occupied in clusters
     Nkeep = 300;
     Nsweep = 10;
     NumSamples = 10000;
