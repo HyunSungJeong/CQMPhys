@@ -26,7 +26,7 @@ function SampleSpin_server(parfn, varargin)
 
         writematrix(Sample, SamplePath, 'Delimiter', ' ');
 
-        save(MPS_GS_Path, 'MPS_GS');
+        save(MPS_GS_Path, 'MPS_GS', '-v7.3');
 
     catch Err
         disp2(getReport(Err));

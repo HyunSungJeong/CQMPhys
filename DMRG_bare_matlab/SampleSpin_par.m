@@ -21,7 +21,7 @@ function SampleSpin_par(varargin)
     Nkeep = 800;
     Nsweep = 10;
     ChainLen = 300;
-    NumSamples = 10;
+    NumSamples = 10000;
     Delta = ones(1,num_jobs);
   
     for it = (1:num_jobs)
