@@ -6,9 +6,9 @@ function Quartic_NRG(parfn,varargin)
 
         partot = job_func_preamble(parfn, varargin{:});
     
-        [PE, Nkeep, K_z, Q, T, JobName, nz] = loadvar(partot, ...
-            {'PE', 'Nkeep', 'K_z', 'Q', 'T', 'JobName', 'nz'}, ...
-                {[], [], [], [], [], [], []});
+        [PE, Nkeep, Lambda, K_z, Q, T, JobName, nz] = loadvar(partot, ...
+            {'PE', 'Nkeep', 'Lambda', 'K_z', 'Q', 'T', 'JobName', 'nz'}, ...
+                {[], [], [], [], [], [], [], []});
     
         %num_threads_SL(8);
         
@@ -25,13 +25,13 @@ function Quartic_NRG(parfn,varargin)
         % Q : quartic-quartic (ddddcccc) interaction strength
     
         % T : Temperature
+        emin = T;
         D = 1;
         Delta = pi;
         ozin = [-1;1]*D;
         RhoV2in = [1;1]*(Delta/pi);
     
         % NRG parameters
-        Lambda = 4;
         N = max(ceil(-2*log(T/100)/log(Lambda))+8,20);
         Etrunc = [];
         ETRUNC = [];
@@ -153,7 +153,7 @@ function Quartic_NRG(parfn,varargin)
         Aconts = cell(1,size(Adiscs,1)); % continuous (i.e., broadened) spectral function
         
         for itz = (1:nz)
-            [odisc,Adiscs,sigmak] = getAdisc(nrgdata{itz},Ops1,Ops2,ZF,'Z_L00',Z_imp,'zflag',zflag,'cflag',cflag,'emin',T);
+            [odisc,Adiscs(:,itz),sigmak] = getAdisc(nrgdata{itz},Ops1,Ops2,ZF,'Z_L00',Z_imp,'zflag',zflag,'cflag',cflag,'emin',emin);
             % odisc: [Numeric vector] center values of the frequency grid
             % sigmak [Numeric vector] center values of the broadening width bins
             % Adiscs: [cell array of numeric matrix] spectral function binned along odisc
@@ -161,10 +161,16 @@ function Quartic_NRG(parfn,varargin)
             % nth matrix Adiscs(n,itz) corresponds to spectral function of Ops1(n) and Ops2(n) binned along odisc and sigmak
             % Length of cell vector Adisc(:,itz): numel(Ops1) = numel(Ops2)
         end
+
+        DiscData.odisc = odisc;
+        DiscData.sigmak = sigmak;
+        DiscData.Adiscs = Adiscs;
+        DiscData.nz = nz;
+        DiscData.emin = emin;
+        save([STG,'/DiscData.mat'],'DiscData');
         
         % file path to save Aconts
         SaveAconts = cellfun(@(x) [STG,'/NRG_Op=',OpNames{x},'.mat'], num2cell(1:numel(Ops1)), 'UniformOutput', false);
-        SaveAdiscs = cellfun(@(x) [STG,'/Adiscs_NRG_Op=',OpNames{x},'_nz=',sprintf('%d',nz),'.mat'], num2cell(1:numel(Ops1)), 'UniformOutput', false);
         
         % Calculate dynamic susceptibilities
         for ita = (1:size(Adiscs,1))
@@ -172,7 +178,7 @@ function Quartic_NRG(parfn,varargin)
             Adisc = mean(cell2mat(reshape(Adiscs(ita,:),[1 1 nz])),3);
             %save(SaveAdiscs{ita},'Adisc');
         
-            [ocont, Aconts{ita}] = getAcont(odisc,Adisc,sigmak,T/5,'alphaz',1/nz,'emin',T);
+            [ocont, Aconts{ita}] = getAcont(odisc,Adisc,sigmak,T/5,'alphaz',1/nz,'emin',emin);
             % ocont : [numeric vector] Logarithimic frequency grid.
             % Aconts : [numeric vector] Smoothened spectral function.
         

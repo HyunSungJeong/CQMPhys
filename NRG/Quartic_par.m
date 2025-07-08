@@ -16,10 +16,11 @@ function Quartic_par (varargin)
     num_jobs = input('>>> ');
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    h_vmem = 64;            % Memory (in GB) to be occupied in clusters
-    PE = 7;                 % # of cores to be occupied in clusters
+    h_vmem = 125;           % Memory (in GB) to be occupied in clusters
+    PE = 16;                % # of cores to be occupied in clusters
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    Nkeep = 3000;
+    Nkeep = 5000;
+    Lambda = 2.5;           % NRG discretization parameter
     nz = ones(1,num_jobs);
     K_z = zeros(1,num_jobs);        % orbital pseudospin exchange coupling: z-component
     Q = zeros(1,num_jobs);          % quartic-quartic(ddddcccc) interaction strength
@@ -30,6 +31,7 @@ function Quartic_par (varargin)
       partot(it).nz = nz(it);
       partot(it).PE = PE;
       partot(it).Nkeep = Nkeep;
+      partot(it).Lambda = Lambda;
   
       fprintf(['K_z for job #',sprintf('%d',it),'\n']);
       intmp = input('>>> ');

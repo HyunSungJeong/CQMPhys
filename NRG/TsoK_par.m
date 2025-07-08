@@ -17,9 +17,12 @@ function TsoK_par (varargin)
 
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   h_vmem = 250;           % Memory (in GB) to be occupied in clusters
-  PE = 24;                % # of cores to be occupied in clusters
+  PE = 32;                % # of cores to be occupied in clusters
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-  Nkeep = 5000;
+  Nkeep = 3000;
+  Lambda = 2.5;           % NRG discretization parameter
+  getSusc = true;        % whether to compute dynamic susceptibility or not
+  getCorr = false;        % whether to compute correlation functions or not
   nz = ones(1,num_jobs);
   J0 = zeros(1,num_jobs);
   K0 = zeros(1,num_jobs);
@@ -31,6 +34,9 @@ function TsoK_par (varargin)
     partot(it).nz = nz(it);
     partot(it).PE = PE;
     partot(it).Nkeep = Nkeep;
+    partot(it).getSusc = getSusc;
+    partot(it).getCorr = getCorr;
+    partot(it).Lambda = Lambda;
 
     fprintf(['J0 for job #',sprintf('%d',it),'\n']);
     intmp = input('>>> ');
@@ -72,8 +78,15 @@ function TsoK_par (varargin)
   end
 
   for it = (1:num_jobs)
-    if ~exist(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)],'dir')
-      mkdir(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)]);
+    if ~exist(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)],'dir')
+
+      if exist(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)],'dir')
+
+        movefile(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)], ...
+                  ['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)]);
+      else
+        mkdir(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)]);
+      end
     end
   end
 
@@ -109,7 +122,7 @@ function TsoK_par (varargin)
     Ts = ['[',Ts(1:end-1),']'];
   end
 
-  parfn = ['TsoK_par_J0=',J0s,'_K0=',K0s,'_I0=',I0s,'_T=',Ts];
+  parfn = ['TsoK_par_J0=',J0s,'_K0=',K0s,'_I0=',I0s,'_T=',Ts,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
 
   dispstruct(partot);
   parfn = [go('mu/Para/'), parfn, '.mat'];
