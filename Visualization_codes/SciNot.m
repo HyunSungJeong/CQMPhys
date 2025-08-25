@@ -7,6 +7,7 @@ function sci = SciNot(Num,varargin)
     %
     % <Option>
     % 'Signif', ... : [numeric] number of significant figures to be represented in the output
+    %                       (Default: 1)
     %
     % <Output>
     % sci : [char] input represented in scientific notation

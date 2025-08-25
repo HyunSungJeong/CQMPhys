@@ -1,4 +1,4 @@
-function PhaseDiag_TI_final(J0, K0)
+function PhaseDiag_TI_final(J0, K0, varargin)
     % <Description>
     % Draws T-I phase diagram from NRG data
     %
@@ -6,309 +6,544 @@ function PhaseDiag_TI_final(J0, K0)
     % J0 : [numeric] spin-spin coupling strength in the isotropic 2soK model
     % K0 : [numeric] pseudospin-pseudospin coupling strength in the isotropic 2soK model
     %
+    % <Option>
+    % 'SpOrbFlip' : If used, the spin and orbital sectors are flipped
+    %
+    % <Output>
+    % Temperature - I0 phase diagram
 
-    NFLboundary = true;
-    I0min = 1e-11;
-    Ymin = 1e-20;
-    NeedExtrap = true;
-    ShowAll = true;
-    ShowMarkers = false;
+    SpOrbFlip = false;
 
-    %% Define phase boundaries using FL scale
+    while ~isempty(varargin)
 
-    [I0, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,'I0min',I0min);
+        switch varargin{1}
+            case 'SpOrbFlip'
+                SpOrbFlip = true;
+                varargin(1) = [];
+            otherwise
+        end
+    end % while
 
-    T_K = nan(1,numel(I0));
-    T_K_diff = nan(1,numel(I0));
-    T_2 = nan(1,numel(I0));
-    T_K_min = -25;
+    I0min = 1e-9;
+    %I0min = 1e-13;
+    I0max = 2e-2;
+    T_thres = -22;
+    Tmin = 1e-12;
+    %Tmin = 1e-15;
+    Tmax = 1e-2;
 
-    X_FL_L = [];
-    X_FL_R = [];
-    Y_FL_L = []; 
-    Y_FL_R = [];
-    X_FO = [];
-    Y_FO = [];
+    Tscale_labels = true;
+    phase_labels = true;
+    plotEnt = true;
 
-    for it1 = 1:numel(I0)
-        for it2 = 1:numel(Phase_name{it1})
+    %% Custom colors
 
-            if it2 < numel(Phase_name{it1})
+    patch_blue = [.910, .906, .969];
+    patch_purple = [.937, .910, .973];
+    patch_orange = [.984, .957, .910];
+    patch_green = [.925, .973, .910];
+    patch_gray = 0.85 * [1, 1, 1];
 
-                if isequal(Phase_name{it1}{it2}, 'Fully Overscreened') && isequal(Phase_name{it1}{it2+1}, 'Orbital Overscreened')
-    
-                    T_2(it1) = Phase_range{it1}(it2,2);
-                    T_K_min = Phase_range{it1}(it2,2);
-    
-                    X_FO = [X_FO, I0(it1)];
-                    Y_FO = cat(2, Y_FO, [Phase_range{it1}(it2,1); Phase_range{it1}(it2,2)] );
+    line_blue = [.188, .137, .761];
+    line_purple = [.455, .165, .765];
+    line_orange = [.902, .612, .247];
+    line_green = [.431, .780, .259];
+    line_gray = 0.5 * [1, 1, 1];
 
-                end
-    
-            elseif isequal(Phase_name{it1}{it2}, 'Fully Overscreened')
-    
-                T_2(it1) = Phase_range{it1}(it2,2);
-                T_K_min = Phase_range{it1}(it2,2);
-    
-                X_FO = [X_FO, I0(it1)];
-                Y_FO = cat(2, Y_FO, [Phase_range{it1}(it2,1); Phase_range{it1}(it2,2)] );
-            end
+    %% Define temperatures scales for each phase
 
-            if isequal(Phase_name{it1}{it2}, 'Fermi Liquid')
-                    
-                T_K(it1) = Phase_range{it1}(it2,2);
+    [I0, Phase_range, Phase_name, Temps, Sent] = PhaseRange_TI(J0, K0, 'I0min', I0min, 'getEnt', 'showAllBound', 'flatThres', 0.2, 'alphaz', 0.7);
+    %[I0, Phase_range, Phase_name] = PhaseRange_TI(J0, K0, 'I0min', I0min, 'showAllBound', 'flatThres', 0.2);
 
-                if I0(it1) < 0
-                    X_FL_L = [X_FL_L, I0(it1)];
-                    Y_FL_L = cat(2, Y_FL_L, [Phase_range{it1}(it2,1); Phase_range{it1}(it2,2) ] );
-                else
-                    X_FL_R = [X_FL_R, I0(it1)];
-                    Y_FL_R = cat(2, Y_FL_R, [Phase_range{it1}(it2,1); Phase_range{it1}(it2,2) ] );
-                end
-            end
+    idx = I0 >= I0min & I0 <= I0max;
+    I0 = I0(idx);
+    Phase_range = Phase_range(idx);
+    Phase_name = Phase_name(idx);
 
-        end % it2
-    end % it1
+    I0min = min(I0);
+    %I0max = max(I0);
 
-    %% Extrapolate FL boundaries
+    T_FL_1 = nan(1, numel(I0));
+    T_FO_1 = nan(1, numel(I0));
+    T_OO_1 = nan(1, numel(I0));
+    T_SO_1 = nan(1, numel(I0));
+    T_F_1 = nan(1, numel(I0));
 
-    if NeedExtrap
+    T_FL_2 = nan(1, numel(I0));
+    T_FO_2 = nan(1, numel(I0));
+    T_OO_2 = nan(1, numel(I0));
+    T_SO_2 = nan(1, numel(I0));
+    T_F_2 = nan(1, numel(I0));
 
-        logYmin = log10(Ymin);
+    for itD = 1:numel(I0)
 
-        EraseIdx = Y_FO(1,:) > logYmin & X_FO < 0;
-        X_FO(EraseIdx) = [];
-        Y_FO(:, EraseIdx) = [];
-        EraseIdx = Y_FO(1,:) > logYmin & X_FO > 0;
-        X_FO(EraseIdx) = [];
-        Y_FO(:, EraseIdx) = [];
-        
-        % coordinates of upper boundary of FL region to be linearly fitted
-        X_FL_L_fit = log10(abs(X_FL_L(Y_FL_L(2,:) < T_K_min)));
-        Y_FL_L_fit = Y_FL_L(2, Y_FL_L(2,:) < T_K_min);
+        for itP = 1:numel(Phase_name{itD})
 
-        % linear fit
-        coeff_L = polyfit(X_FL_L_fit, Y_FL_L_fit, 1);
+            switch Phase_name{itD}{itP}
 
-        % extrapolation from the end of FL region to FO region
-        I0_Extrap_L = linspace(log10(abs(X_FL_L(end)))-0.1, log10(abs(X_FO(1))), 10);
-        X_FL_L_Extrap = -power(10, I0_Extrap_L);
-        Y_FL_L_Extrap = [logYmin*ones(1,10); polyval(coeff_L, I0_Extrap_L)];
+                case 'Fermi Liquid'
+                    T_FL_2(itD) = power(10, Phase_range{itD}(itP,2) );
 
-        % discard extrapolated boundary under Ymin
-        X_FL_L_Extrap = X_FL_L_Extrap(Y_FL_L_Extrap(2,:) > logYmin);
-        Y_FL_L_Extrap = Y_FL_L_Extrap(:, Y_FL_L_Extrap(2,:) > logYmin);
-
-
-        X_FL_L = [X_FL_L, X_FL_L_Extrap];
-        Y_FL_L = cat(2, Y_FL_L, Y_FL_L_Extrap);
-    
-        X_FL_R_fit = log10(abs(X_FL_R(Y_FL_R(2,:) < T_K_min)));
-        Y_FL_R_fit = Y_FL_R(2, Y_FL_R(2,:) < T_K_min);
-        coeff_R = polyfit(X_FL_R_fit, Y_FL_R_fit, 1);
-        I0_Extrap_R = linspace(log10(X_FO(end)), log10(abs(X_FL_R(1)))-0.1, 10);
-        X_FL_R_Extrap = power(10, I0_Extrap_R);
-        Y_FL_R_Extrap = [logYmin*ones(1,10); polyval(coeff_R, I0_Extrap_R)];
-        X_FL_R_Extrap = X_FL_R_Extrap(Y_FL_R_Extrap(2,:) > logYmin);
-        Y_FL_R_Extrap = Y_FL_R_Extrap(:, Y_FL_R_Extrap(2,:) > logYmin);
-        X_FL_R = [X_FL_R_Extrap, X_FL_R];
-        Y_FL_R = cat(2, Y_FL_R_Extrap, Y_FL_R);
-    end
-
-
-    %% Adjust NFL boundary to the extrapolated FL boundary
-
-    if NeedExtrap
-            
-        X_FL_L_under = X_FL_L(Y_FL_L(2,:) <= T_K_min);
-        Y_FL_L_under = Y_FL_L(2, Y_FL_L(2,:) <= T_K_min);
-        X_FL_R_under = X_FL_R(Y_FL_R(2,:) <= T_K_min);
-        Y_FL_R_under = Y_FL_R(2, Y_FL_R(2,:) <= T_K_min);
-        
-        X_FO = [X_FL_L_under, X_FO, X_FL_R_under];
-        Y_FO = cat(2, [Y_FL_L_under; T_K_min*ones(1, numel(Y_FL_L_under))], Y_FO);
-        Y_FO = cat(2, Y_FO, [Y_FL_R_under; T_K_min*ones(1, numel(Y_FL_R_under))]);
-        
-        Idx_L = find(Y_FL_L(2,:) > T_K_min, 1, 'last');
-        Idx_R = find(Y_FL_R(2,:) > T_K_min, 1, 'first');
-        X_FO = [X_FL_L(Idx_L), X_FO, X_FL_R(Idx_R)];
-        Y_FO = cat(2, repmat(Y_FL_L(2,Idx_L), [2,1]), Y_FO);
-        Y_FO = cat(2, Y_FO, repmat(Y_FL_R(2,Idx_R), [2,1]));
-    end
-
-    %% Define phase region patches
-    X_FL_L = [X_FL_L, fliplr(X_FL_L)];
-    Y_FL_L = [Y_FL_L(1,:), fliplr(Y_FL_L(2,:))];
-    X_FL_R = [X_FL_R, fliplr(X_FL_R)];
-    Y_FL_R = [Y_FL_R(1,:), fliplr(Y_FL_R(2,:))];
-    X_FO = [X_FO, fliplr(X_FO)];
-    Y_FO = [Y_FO(1,:), fliplr(Y_FO(2,:))];
-
-    %% Exponentiate
-    T_K = power(10,T_K);
-    T_K_diff = power(10,T_K_diff);
-    T_2 = power(10,T_2);
-    T_K_min = power(10,T_K_min);
-
-    %T_K(T_K < T_K_min) = nan;
-    T_2(T_K < T_K_min) = T_K_min;
-    
-    Y_FL_L = power(10,Y_FL_L);
-    Y_FL_R = power(10,Y_FL_R);
-    Y_FO = power(10,Y_FO);
-    
-    figure;
-    hold on;
-    ylim([Ymin, 1e-1]);
-    ax.XAxis.FontSize = 15;
-    ax.YAxis.FontSize = 15;
-    ax.XAxis.MinorTick = 'on';
-    ax.Layer = 'top';
-    title(['$J_{0} = ',sprintf('%.15g',J0),', K_{0} = ',sprintf('%.15g',K0),'$'], 'interpreter', 'latex', 'fontsize', 21);
-    xlabel('$I_{0}$', 'interpreter', 'latex', 'fontsize', 25);
-    ylabel('$\mathrm{T}$', 'interpreter', 'latex', 'fontsize', 25);
-    [~,lin2sym_X,~] = SLplot(I0, T_K, 'XScale', 'symlog', 'YScale', 'log');
-
-    X_FL_L = lin2sym_X(X_FL_L);
-    X_FL_R = lin2sym_X(X_FL_R);
-    X_FO = lin2sym_X(X_FO);
-    patch(X_FL_L, Y_FL_L, [.753,.878,.753], 'FaceAlpha', 1, 'linestyle', 'none');
-    patch(X_FL_R, Y_FL_R, [.753,.878,.753], 'FaceAlpha', 1, 'linestyle', 'none');
-    patch(X_FO, Y_FO, 1.1*[.745 .682 .898], 'FaceAlpha', 1, 'linestyle', 'none');
-
-    if ShowMarkers
-        I0_sym = lin2sym_X(I0);
-        plot(I0_sym(T_K > T_K_min), T_K(T_K > T_K_min), '.', 'color', 'red', 'MarkerSize', 10);
-        plot(I0_sym(T_K < T_K_min), T_K(T_K < T_K_min), '.', 'color', 'black', 'MarkerSize', 10);
-        plot(I0_sym, T_K_diff, '.', 'Color', 'black', 'MarkerSize', 10);
-        plot(I0_sym, T_2, '.', 'Color', 'blue', 'MarkerSize', 10);
-    end
-
-    if NeedExtrap
-        X_FL_L_Extrap_sym = lin2sym_X(X_FL_L_Extrap);
-        X_FL_R_Extrap_sym = lin2sym_X(X_FL_R_Extrap);
-        plot(X_FL_L_Extrap_sym, power(10, Y_FL_L_Extrap(2,:)), '--', 'Color', 'black', 'LineWidth', 1);
-        plot(X_FL_R_Extrap_sym, power(10, Y_FL_R_Extrap(2,:)), '--', 'Color', 'black', 'LineWidth', 1);
-    end
-    
-
-
-
-    %% Define phase boundaries using NFL scales
-
-    [I0, Phase_range, Phase_name] = PhaseRange_TI(J0,K0,'NFLboundary','I0min',I0min);
-
-    T_K = nan(1,numel(I0));
-    T_K_diff = nan(1,numel(I0));
-    T_2 = nan(1,numel(I0));
-    T_K_min = -25;
-
-    X_FL_L = [];
-    X_FL_R = [];
-    Y_FL_L = []; 
-    Y_FL_R = [];
-    X_FO = [];
-    Y_FO = [];
-
-    for it1 = 1:numel(I0)
-        for it2 = 1:numel(Phase_name{it1})
-
-            if it2 < numel(Phase_name{it1})
-                if isequal(Phase_name{it1}{it2}, 'Fermi Liquid') && ismember(Phase_name{it1}{it2+1}, {'Orbital Overscreened', 'Spin Overscreened', 'Fully Overscreened'})
-                        
-                    T_K(it1) = Phase_range{it1}(it2+1,1);
-    
-                    if I0(it1) < 0
-                        X_FL_L = [X_FL_L, I0(it1)];
-                        Y_FL_L = cat(2, Y_FL_L, [Phase_range{it1}(it2,1); Phase_range{it1}(it2+1,1) ] );
-                    else
-                        X_FL_R = [X_FL_R, I0(it1)];
-                        Y_FL_R = cat(2, Y_FL_R, [Phase_range{it1}(it2,1); Phase_range{it1}(it2+1,1) ] );
+                    if Phase_range{itD}(itP,1) > T_thres
+                        T_FL_1(itD) = power(10, Phase_range{itD}(itP,1) );
                     end
-                        
-                elseif isequal(Phase_name{it1}{it2}, 'Fully Overscreened') && isequal(Phase_name{it1}{it2+1}, 'Orbital Overscreened')
-    
-                    T_2(it1) = Phase_range{it1}(it2,2);
-                    T_K_min = Phase_range{it1}(it2,2);
-    
-                    X_FO = [X_FO, I0(it1)];
-                    Y_FO = cat(2, Y_FO, [Phase_range{it1}(it2,1); Phase_range{it1}(it2,2)] );
 
-                end
-    
-            elseif isequal(Phase_name{it1}{it2}, 'Fermi Liquid')
-                T_K_diff(it1) = Phase_range{it1}(it2,2);
-    
-            elseif isequal(Phase_name{it1}{it2}, 'Fully Overscreened')
-    
-                T_2(it1) = Phase_range{it1}(it2,2);
-                T_K_min = Phase_range{it1}(it2,2);
-    
-                X_FO = [X_FO, I0(it1)];
-                Y_FO = cat(2, Y_FO, [Phase_range{it1}(it2,1); Phase_range{it1}(it2,2)] );
-            end
+                case 'Fully Overscreened'
+                    T_FO_2(itD) = power(10, Phase_range{itD}(itP,2) );
 
+                    if Phase_range{itD}(itP,1) > T_thres
+                        T_FO_1(itD) = power(10, Phase_range{itD}(itP,1) );
+                    end
+
+                case 'Orbital Overscreened'
+                    T_OO_2(itD) = power(10, Phase_range{itD}(itP,2) );
+
+                    if Phase_range{itD}(itP,1) > T_thres
+                        T_OO_1(itD) = power(10, Phase_range{itD}(itP,1) );
+                    end
+
+                case 'Spin Overscreened'
+                    T_SO_2(itD) = power(10, Phase_range{itD}(itP,2) );
+
+                    if Phase_range{itD}(itP,1) > T_thres
+                        T_SO_1(itD) = power(10, Phase_range{itD}(itP,1) );
+                    end
+
+                case 'Unscreened'
+                    T_F_2(itD) = power(10, Phase_range{itD}(itP,2) );
+
+                    if Phase_range{itD}(itP,1) > T_thres
+                        T_F_1(itD) = power(10, Phase_range{itD}(itP,1) );
+                    end
+
+                otherwise
+
+            end % switch-case
+            
         end % it2
     end % it1
 
-    %% Define phase regions
 
-    %{}
-    Idx_L = find(Y_FL_L(2,:) > T_K_min, 1, 'last');
-    Idx_R = find(Y_FL_R(2,:) > T_K_min, 1, 'first');
-    X_FO = [X_FL_L(Idx_L), X_FO, X_FL_R(Idx_R)];
-    Y_FO = cat(2, repmat(Y_FL_L(2,Idx_L), [2,1]), Y_FO);
-    Y_FO = cat(2, Y_FO, repmat(Y_FL_R(2,Idx_R), [2,1]));
-    %}
+    %% Plot phase diagram with entropy colormap
 
-    %% Define phase region patches
-    X_FL_L = [X_FL_L, fliplr(X_FL_L)];
-    Y_FL_L = [Y_FL_L(1,:), fliplr(Y_FL_L(2,:))];
-    X_FL_R = [X_FL_R, fliplr(X_FL_R)];
-    Y_FL_R = [Y_FL_R(1,:), fliplr(Y_FL_R(2,:))];
-    X_FO = [X_FO, fliplr(X_FO)];
-    Y_FO = [Y_FO(1,:), fliplr(Y_FO(2,:))];
+    if plotEnt
 
-    %% Exponentiate
-    T_K = power(10,T_K);
-    T_K_diff = power(10,T_K_diff);
-    T_2 = power(10,T_2);
-    T_K_min = power(10,T_K_min);
-    T_2(T_K < T_K_min) = T_K_min;
+        figure;
+        hold on;
+        set(gca, 'XScale', 'log', 'YScale', 'log', 'FontSize', 20);
+        ax = gca;
+        ax.XAxis.FontSize = 15;
+        ax.YAxis.FontSize = 15;
+        xlabel('$\mathrm{I_{0}}$', 'Interpreter', 'latex', 'FontSize', 25);
+        ylabel('$\mathrm{energy \ scale}$', 'Interpreter', 'latex', 'FontSize', 25);
+                
     
-    Y_FL_L = power(10,Y_FL_L);
-    Y_FL_R = power(10,Y_FL_R);
-    Y_FO = power(10,Y_FO);
-
-    ylim([Ymin, 1e-1]);
-    ax.XAxis.FontSize = 15;
-    ax.YAxis.FontSize = 15;
-    ax.XAxis.MinorTick = 'on';
-    ax.Layer = 'top';
-    title(['$J_{0} = ',sprintf('%.15g',J0),', K_{0} = ',sprintf('%.15g',K0),'$'], 'interpreter', 'latex', 'fontsize', 21);
-    xlabel('$I_{0}$', 'interpreter', 'latex', 'fontsize', 25);
-    ylabel('$\mathrm{T}$', 'interpreter', 'latex', 'fontsize', 25);
-    [~,lin2sym_X,~] = SLplot(I0, T_K, 'XScale', 'symlog', 'YScale', 'log');
-
-    if ShowAll
-        X_FL_L = lin2sym_X(X_FL_L);
-        X_FL_R = lin2sym_X(X_FL_R);
-        X_FO = lin2sym_X(X_FO);
-        %patch(X_FL_L, Y_FL_L, [.753,.878,.753], 'FaceAlpha', 1, 'linestyle', 'none');
-        %patch(X_FL_R, Y_FL_R, [.753,.878,.753], 'FaceAlpha', 1, 'linestyle', 'none');
-        patch(X_FO, Y_FO, 0.9*[.745 .682 .898], 'FaceAlpha', 1, 'linestyle', 'none');
+        % define and plot colormap for entropy
+        Cmap = zeros(numel(Temps), numel(I0));
     
-        if ShowMarkers
-            I0_sym = lin2sym_X(I0);
-            plot(I0_sym(T_K > T_K_min), T_K(T_K > T_K_min), '.', 'color', 'red', 'MarkerSize', 10);
-            plot(I0_sym(T_K > T_K_min & I0 < 0), T_K(T_K > T_K_min & I0 < 0), '--', 'color', 'red', 'MarkerSize', 10);
-            plot(I0_sym(T_K > T_K_min & I0 > 0), T_K(T_K > T_K_min & I0 > 0), '--', 'color', 'red', 'MarkerSize', 10);
-            plot(I0_sym(T_K < T_K_min), T_K(T_K < T_K_min), '.', 'color', 'black', 'MarkerSize', 10);
-            %plot(I0_sym, T_2, '.', 'Color', 'blue', 'MarkerSize', 10);
+        Tsqrt2 = nan(1, numel(I0));
+    
+        for it = 1:numel(I0)
+            Cmap(:,it) = exp(Sent{it});
+            
+            T1 = []; T2 = [];
+            Idx1 = find(Sent{it} < log(2)/2, 1, 'first');
+            Idx2 = find(Sent{it} > log(2)/2, 1, 'last');
+            T1 = Temps(Idx1);
+            T2 = Temps(Idx2);
+    
+            if ~isempty(T1)
+    
+                d1 = abs(sqrt(2) - exp(Sent{it}(Idx1)));
+                d2 = abs(sqrt(2) - exp(Sent{it}(Idx2)));
+    
+                % Internal division point weighted by distances
+                Tsqrt2(it) = exp( (d2 * log(T1) + d1 * log(T2)) / (d1 + d2) );
+            end
         end
     
-        xlim([-0.8709, 0.8709]);
+        xlim([I0min, I0max]);
+        ylim([Tmin, Tmax]);
+    
+        [arrow_X, arrow_Y] = meshgrid(I0, Temps);
+        surf(arrow_X, arrow_Y, Cmap, 'EdgeColor', 'none');
+        view(2);      
+        colormap('jet');
+        cb = colorbar;
+        ylabel(cb, '$\exp(S_{\mathrm{imp}})$', 'Interpreter', 'latex'); 
+        clim([0,4]);            % Set color value limits
+    
+        Z = 5*ones(1,numel(I0));
+        % plot phase temperature scales
+        plot3(I0, T_FO_1, Z, 'o-', 'color', 'red', 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_SO_1, Z, 'o-', 'color', 'green', 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_OO_1, Z, 'o-', 'color', 'blue', 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_FL_1, Z, 'o-', 'color', patch_blue, 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_F_1, Z, 'o-', 'color', [.7,.7,.7], 'Markersize', 5, 'LineWidth', 2);
+    
+        plot3(I0, T_FO_2, Z, 'o-', 'color', 'red', 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_SO_2, Z, 'o-', 'color', 'green', 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_OO_2, Z, 'o-', 'color', 'blue', 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_FL_2, Z, 'o-', 'color', patch_blue, 'Markersize', 5, 'LineWidth', 2);
+        plot3(I0, T_F_2, Z, 'o-', 'color', [.7,.7,.7], 'Markersize', 5, 'LineWidth', 2);
+    
+        Idx = ~isnan(Tsqrt2);
+        plot3(I0(Idx), Tsqrt2(Idx), Z(Idx), '--', 'color', [.7,.7,.7], 'LineWidth', 1);
+    
+        %plot3(I0, sqrt(T_FL_2 .* T_OO_1), Z, 'o-', 'color', 'black', 'Markersize', 5, 'LineWidth', 2);
+    
+        set(gca, 'Layer', 'top');
         hold off;
     end
+
+
+    %% Plot phase diagram without entropy colormap
+
+    figure('Position', [400, 300, 550, 400]);
+    hold on;
+    ax = gca;
+    pos = [0.15, 0.15, 0.775, 0.815];
+    set(ax, 'Position', pos);
+    set(ax, 'XScale', 'log', 'YScale', 'log', 'FontSize', 20);
+    set(ax, 'XTick', 10.^(-8:2:-2));
+    set(ax, 'YTick', 10.^(-12:2:-2));
+    set(ax, 'FontSize', 20);
+    set(ax, 'LineWidth', 1);  % make axis lines (incl. ticks) bold
+    set(ax, 'XMinorTick', 'on', 'YMinorTick', 'on');
+    ax.TickLength = [0.015, 0.002];      % ticksize : [major, minor]
+    set(gca, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
+    %set(gcf, 'Position', [400, 300, 550, 400]);  % Width = 567 px, Height = 420 px
+
+    ax = gca;
+
+    xlabel('$I_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
+    ylabel('$\mathrm{Temperature / energy \ scale}$', 'Interpreter', 'latex', 'FontSize', 20);
+
+    hx = get(ax, 'XLabel');
+    hy = get(ax, 'YLabel');
+    hx.Units = 'normalized';
+    hy.Units = 'normalized';
+
+    % Modify x- and y-label positions manually
+    hx.Position = hx.Position + [0, -0.05, 0];
+    hy.Position = hy.Position + [-0.09, 0, 0];
+
+    pos = ax.Position;  % [left bottom width height]
+    %{
+    pos(1) = pos(1) + 0.08;
+    pos(3) = pos(3) - 0.08;     % shrink width by 0.1 to make space on the left
+    pos(2) = pos(2) + 0.05;
+    pos(4) = pos(4) - 0.02;     % shrink height by 0.02 to make space on the top
+    ax.Position = pos;
+    %}
+
+    % redefine x-tick labels using annotation()
+    tickLabelFont = 15;
+    ax.XTickLabel = [];
+    xticks = 10.^(-2:-2:-8);
+    
+    xtickWidth = 0.09;
+    xtickHeight = 0.06;
+    for itx = 1:numel(xticks)
+        X_pos = pos(1) + pos(3) * (log10(xticks(itx)) - log10(I0min)) / (log10(I0max) - log10(I0min));
+        Y_pos = pos(2);
+        X_pos = X_pos - 0.05;
+        Y_pos = Y_pos - 0.06;
+        annotation('textbox', [X_pos, Y_pos, xtickWidth, xtickHeight], 'String', ['$',SciNot(xticks(itx)),'$'], 'Interpreter', 'latex', ...
+                        'HorizontalAlignment', 'left', 'FitBoxToText', 'off', 'Units', 'normalized', 'LineStyle', 'none', 'FontSize', tickLabelFont);
+    end
+
+    % redefine y-tick labels using annotation()
+    ax.YTickLabel = [];
+    yticks = 10.^(-2:-2:-12);
+    
+    ytickWidth = 0.09;
+    ytickHeight = 0.15;
+    for ity = 1:numel(yticks)
+        X_pos = pos(1);
+        Y_pos = pos(2) + pos(4) * (log10(yticks(ity)) - log10(Tmin)) / (log10(Tmax) - log10(Tmin));
+        X_pos = X_pos - 0.08;
+        Y_pos = Y_pos - 0.11;
+        annotation('textbox', [X_pos, Y_pos, ytickWidth, ytickHeight], 'String', ['$',SciNot(yticks(ity)),'$'], 'Interpreter', 'latex', ...
+                        'HorizontalAlignment', 'right', 'FitBoxToText', 'off', 'Units', 'normalized', 'LineStyle', 'none', 'FontSize', tickLabelFont);
+    end
+
+    % extrapolate fully overscreened -  orbital overscreened phase boundary
+    FO_Tmax = T_FO_2(find(I0 == I0min));
+    idx1 = find(T_FO_1 > Tmin, 1);
+    idx2 = find(~isnan(T_FO_1), 1, 'last');
+    idx3 = find(~isnan(T_OO_1), 1, 'last');
+
+    X = log10(I0(idx2+1:idx3));
+    Y = log10(T_OO_1(idx2+1:idx3));
+    f = polyfit(X, Y, 1);
+    I0_FO_extrap = ( log10(FO_Tmax) - f(2) ) / f(1);
+    I0_FO_extrap = power(10, I0_FO_extrap);
+
+    % extrapolate FL - OO - free phase boundaries
+    OO_T_extrap = T_OO_2(find(~isnan(T_OO_2), 1));
+    I0_FL_extrap = ( log10(OO_T_extrap) - f(2) ) / f(1);
+    I0_FL_extrap = power(10, I0_FL_extrap);
+
+    % define fully overscreened phase patch
+    FO_x = [I0min, I0(idx1), I0(idx1:idx2+1), I0_FO_extrap, I0min];
+    FO_y = [Tmin, Tmin, T_FO_1(idx1:idx2), T_OO_1(idx2+1), FO_Tmax, FO_Tmax];
+    
+    % define orbital overscreened phase patch
+    idx4 = find(I0 > I0_FO_extrap, 1);
+    idx5 = find(~isnan(T_OO_2), 1);
+    idx6 = find(~isnan(T_OO_1), 1, 'last');
+    idx7 = find(~isnan(T_OO_2), 1, 'last');
+
+    OO_x = [I0min, I0_FO_extrap, I0(idx4:idx6), I0_FL_extrap, I0(idx7:-1:idx5), I0min];
+    OO_y = [FO_Tmax, FO_Tmax, T_OO_1(idx4:idx6), OO_T_extrap, T_OO_2(idx7:-1:idx5), OO_T_extrap];
+
+    % define Fermi liquid phase patch
+    FL_x = [I0(idx1), I0max, I0max, I0_FL_extrap, I0(idx6:-1:idx2+1), I0(idx2:-1:idx1)];
+    FL_y = [Tmin, Tmin, OO_T_extrap, OO_T_extrap, T_OO_1(idx6:-1:idx2+1), T_FO_1(idx2:-1:idx1)];
+
+    % define unscreened phase patch
+    F_x = [I0min, I0max, I0max, I0min];
+    F_y = [OO_T_extrap, OO_T_extrap, Tmax, Tmax];
+
+    % plot phase patches
+    FO_patch = patch(FO_x, FO_y, patch_purple, 'EdgeColor', 'none');
+    OO_patch = patch(OO_x, OO_y, patch_orange, 'EdgeColor', 'none');
+    FL_patch = patch(FL_x, FL_y, patch_green, 'EdgeColor', 'none');
+    F_patch = patch(F_x, F_y, patch_gray, 'EdgeColor', 'none');
+
+    % define extrapolated parts of phase boundaries
+    I0_UO_ext_bound = [I0min, I0(idx5), I0(idx6), I0_FL_extrap, I0max];
+    T_UO_ext_bound = repmat(OO_T_extrap, [1,5]);
+
+    I0_FO_ext_bound = [I0(idx2+1), I0_FO_extrap];
+    T_FO_ext_bound = [FO_Tmax, FO_Tmax];
+
+    I0_FL_ext_bound = [I0(idx6), I0_FL_extrap];
+    T_FL_ext_bound = [T_OO_1(idx6), OO_T_extrap];
+
+    % plot phase boundaries
+    MS = 5;
+    LW = 1;
+    LS = '-';
+    %plot(I0, T_FO_1, LS, 'color', line_gray, 'Markersize', MS, 'LineWidth', LW);
+    %plot(I0(idx2+1:end), T_OO_1(idx2+1:end), LS, 'color', line_gray, 'Markersize', MS, 'LineWidth', LW);
+
+    plot(I0, T_FO_2, LS, 'color', line_purple, 'Markersize', MS, 'LineWidth', LW);
+    plot(I0, T_OO_2, LS, 'color', line_orange, 'Markersize', MS, 'LineWidth', LW);
+    plot(I0, T_FL_2, LS, 'color', line_green, 'Markersize', MS, 'LineWidth', LW);
+
+    showIdx = ismember(I0, 10.^(-14:0.2:-2));
+    plot(I0(showIdx), T_FO_2(showIdx), 'x', 'color', line_purple, 'Markersize', MS, 'LineWidth', LW);
+    plot(I0(showIdx), T_OO_2(showIdx), 'x', 'color', line_orange, 'Markersize', MS, 'LineWidth', LW);
+    plot(I0(showIdx), T_FL_2(showIdx), 'x', 'color', line_green, 'Markersize', MS, 'LineWidth', LW);
+    
+    % plot extrapolated parts of phase boundaries
+    plot(I0_UO_ext_bound(1:2), T_UO_ext_bound(1:2), '--', 'color', line_orange, 'Markersize', MS, 'LineWidth', 2);
+    plot(I0_UO_ext_bound(3:4), T_UO_ext_bound(3:4), '--', 'color', line_orange, 'Markersize', MS, 'LineWidth', 2);
+    %plot(I0_UO_ext_bound(4:5), T_UO_ext_bound(4:5), '--', 'color', line_gray, 'Markersize', MS, 'LineWidth', 2);
+    plot(I0_FO_ext_bound, T_FO_ext_bound, '--', 'color', line_purple, 'Markersize', MS, 'LineWidth', 2);
+    %plot(I0_FL_ext_bound, T_FL_ext_bound, '--', 'color', line_gray, 'Markersize', MS, 'LineWidth', 2);
+
+    % plot phase boundary markers
+    FO_text = '$T_{\mathrm{FO}}$';
+    SO_text = '$T_{\mathrm{SO}}$';
+    OO_text = '$T_{\mathrm{OO}}$';
+    FL_text = '$T_{\mathrm{FL}}$';
+    PHB_text = '$T_{\mathrm{PHB}}$';
+    LW = 1.3;
+
+    if J0 == 0.2
+
+        if Tscale_labels
+            FS = 15;
+            % Fermi liquid scale
+            arrow_X = [0.73, 0.68];
+            arrow_Y = [0.54, 0.55];
+            text_X = 2.3e-4;
+            text_Y = 4.5e-8;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_green, 'LineWidth', LW);
+            text(text_X, text_Y, FL_text, 'Color', line_green, 'Interpreter', 'latex', 'FontSize', FS);
+
+            %{
+            % particle-hole symmetry breaking scale
+            arrow_X = [0.71, 0.66];
+            arrow_Y = [0.665, 0.65];
+            text_X = 1.8e-4;
+            text_Y = 4.5e-6;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_gray, 'LineWidth', LW);
+            text(text_X, text_Y, PHB_text, 'Color', line_gray, 'Interpreter', 'latex', 'FontSize', FS);
+            %}
+
+            % fully overscreened phase scale
+            arrow_X = [0.52, 0.47];
+            arrow_Y = [0.66, 0.64];
+            text_X = 1.5e-6;
+            text_Y = 2e-6;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_purple, 'LineWidth', LW);
+            text(text_X, text_Y, FO_text, 'Color', line_purple, 'Interpreter', 'latex', 'FontSize', FS);
+    
+            % orbital overscreened phase scale
+            arrow_X = [0.45, 0.4];
+            arrow_Y = [0.815, 0.795];
+            text_X = 3e-7;
+            text_Y = 2.2e-4;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_orange, 'LineWidth', LW);
+            if SpOrbFlip
+                text(text_X, text_Y, SO_text, 'Color', line_orange, 'Interpreter', 'latex', 'FontSize', FS);
+            else
+                text(text_X, text_Y, OO_text, 'Color', line_orange, 'Interpreter', 'latex', 'FontSize', FS);
+            end
+        end
+
+        if phase_labels
+            FS = 15;
+            
+            % Fermi liquid
+            text_X = 1e-5;
+            text_Y = 1e-10;
+            text(text_X, text_Y, '$\mathrm{Fermi \ Liquid}$', 'Color', line_green, 'Interpreter', 'latex', 'FontSize', FS);
+        
+            % fully overscreened
+            text_X = 6e-9;
+            text_Y = 2.3e-7;
+            text(text_X, text_Y, '$\mathrm{Fully}$', 'Color', line_purple, 'Interpreter', 'latex', 'FontSize', FS);
+            text_X = 1.5e-9;
+            text_Y = 6e-8;
+            text(text_X, text_Y, '$\mathrm{Overscreened}$', 'Color', line_purple, 'Interpreter', 'latex', 'FontSize', FS);
+    
+            % orbital overscreened
+            text_X = 1.5e-9;
+            text_Y = 1e-5;
+            if SpOrbFlip
+                text(text_X, text_Y, '$\mathrm{Spin \ Overscreened}$', 'Color', line_orange, 'Interpreter', 'latex', 'FontSize', FS);
+            else
+                text(text_X, text_Y, '$\mathrm{Orbital \ Overscreened}$', 'Color', line_orange, 'Interpreter', 'latex', 'FontSize', FS);
+            end
+        end
+
+        %% linear fit to find power laws
+
+        X = I0(idx1:idx3);
+        %Y = [T_FO_1(idx1:idx2), T_OO_1(idx2+1:idx3)];
+    
+        %{
+        idx = X >= 1e-7 & X < 5e-5;
+        f = polyfit(log10(X(idx)), log10(Y(idx)), 1);
+        Xfit = linspace(-7, -5+log10(5), 10);
+        Yfit = polyval(f, Xfit);
+        Xfit = power(10, Xfit);     Yfit = power(10, Yfit)/2;
+        plot(Xfit, Yfit, '-', 'Color', line_gray, 'LineWidth', 1);
+        textX = 3e-6;
+        textY = 8e-8;
+        text(textX, textY, ['$\omega^{',sprintf('%.1f',f(1)),'}$'], 'Color', line_gray, 'Interpreter', 'latex', 'FontSize', FS);
+        %}
+
+        Y = T_FL_2(idx1:idx3);
+        idx = X >= 1e-7 & X < 5e-5;
+        f = polyfit(log10(X(idx)), log10(Y(idx)), 1);
+        Xfit = linspace(-7, -5+log10(5), 10);
+        Yfit = polyval(f, Xfit);
+        Xfit = power(10, Xfit);     Yfit = power(10, Yfit)/2;
+        plot(Xfit, Yfit, '-', 'Color', line_green, 'LineWidth', 1);
+        textX = 3e-6;
+        textY = 2e-9;
+        text(textX, textY, ['$\omega^{',sprintf('%.1f',f(1)),'}$'], 'Color', line_green, 'Interpreter', 'latex', 'FontSize', FS);
+        
+    elseif J0 == 0.1
+
+        if Tscale_labels
+            % Fermi liquid scale
+            arrow_X = [0.72, 0.67];
+            arrow_Y = [0.52, 0.53];
+            text_X = 2.3e-4;
+            text_Y = 4.5e-8;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_green, 'LineWidth', LW);
+            text(text_X, text_Y, FL_text, 'Color', line_green, 'Interpreter', 'latex', 'FontSize', FS);
+
+            %{
+            % particle-hole symmetry breaking scale
+            arrow_X = [0.71, 0.66];
+            arrow_Y = [0.665, 0.65];
+            text_X = 1.8e-4;
+            text_Y = 4.5e-6;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_gray, 'LineWidth', LW);
+            text(text_X, text_Y, PHB_text, 'Color', line_gray, 'Interpreter', 'latex', 'FontSize', FS);
+            %}
+
+            % fully overscreened phase scale
+            arrow_X = [0.48, 0.43];
+            arrow_Y = [0.64, 0.63];
+            text_X = 1.5e-6;
+            text_Y = 2e-6;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_purple, 'LineWidth', LW);
+            text(text_X, text_Y, FO_text, 'Color', line_purple, 'Interpreter', 'latex', 'FontSize', FS);
+    
+            % orbital overscreened phase scale
+            arrow_X = [0.4, 0.35];
+            arrow_Y = [0.795, 0.775];
+            text_X = 3e-7;
+            text_Y = 2.2e-4;
+            annotation('arrow', arrow_X, arrow_Y, 'Color', line_orange, 'LineWidth', LW);
+            text(text_X, text_Y, OO_text, 'Color', line_orange, 'Interpreter', 'latex', 'FontSize', FS);
+        end
+
+        if phase_labels
+            FS = 15;
+            
+            % Fermi liquid
+            text_X = 1e-5;
+            text_Y = 1e-10;
+            text(text_X, text_Y, '$\mathrm{Fermi \ Liquid}$', 'Color', line_green, 'Interpreter', 'latex', 'FontSize', FS);
+        
+            % fully overscreened
+            text_X = 6e-9;
+            text_Y = 1e-7;
+            text(text_X, text_Y, '$\mathrm{Fully}$', 'Color', line_purple, 'Interpreter', 'latex', 'FontSize', FS);
+            text_X = 1.5e-9;
+            text_Y = 3e-8;
+            text(text_X, text_Y, '$\mathrm{Overscreened}$', 'Color', line_purple, 'Interpreter', 'latex', 'FontSize', FS);
+    
+            % orbital overscreened
+            text_X = 1.5e-9;
+            text_Y = 8e-6;
+            text(text_X, text_Y, '$\mathrm{Orbital \ Overscreened}$', 'Color', line_orange, 'Interpreter', 'latex', 'FontSize', FS);
+        end
+
+        %% linear fit to find power laws
+
+        X = I0(idx1:idx3);
+        Y = [T_FO_1(idx1:idx2), T_OO_1(idx2+1:idx3)];
+    
+        %{
+        idx = X >= 1e-7 & X < 5e-5;
+        f = polyfit(log10(X(idx)), log10(Y(idx)), 1);
+        Xfit = linspace(-7, -5+log10(5), 10);
+        Yfit = polyval(f, Xfit);
+        Xfit = power(10, Xfit);     Yfit = power(10, Yfit)/2;
+        plot(Xfit, Yfit, '-', 'Color', line_gray, 'LineWidth', 1);
+        textX = 3e-6;
+        textY = 8e-8;
+        text(textX, textY, ['$\omega^{',sprintf('%.1f',f(1)),'}$'], 'Color', line_gray, 'Interpreter', 'latex', 'FontSize', FS);
+        %}
+
+        Y = T_FL_2(idx1:idx3);
+        idx = X >= 1e-7 & X < 5e-5;
+        f = polyfit(log10(X(idx)), log10(Y(idx)), 1);
+        Xfit = linspace(-7, -5+log10(5), 10);
+        Yfit = polyval(f, Xfit);
+        Xfit = power(10, Xfit);     Yfit = power(10, Yfit)/2;
+        plot(Xfit, Yfit, '-', 'Color', line_green, 'LineWidth', 1);
+        textX = 3e-6;
+        textY = 2e-9;
+        text(textX, textY, ['$\omega^{',sprintf('%.1f',f(1)),'}$'], 'Color', line_green, 'Interpreter', 'latex', 'FontSize', FS);
+
+    end
+
+    set(gca, 'Layer', 'top');
+    xlim([I0min, I0max]);
+    ylim([Tmin, Tmax]);
+
+    hold off;
 
 end

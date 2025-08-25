@@ -9,8 +9,8 @@ function Elev_labeled = Elev_label(Etot, Qtot, N, N_elev)
     % <Output>
     % Elev_labeled : [1x2 cell array]
     %               the lowest N_elev energy levels with their quantum numbers from NRG iteration #N
-    %               the 1st cell is the lowest energy levels in increasing order,
-    %               and the 2nd cell is the quantum numbers for each energy levels
+    %               the 1st column is the lowest energy levels in increasing order,
+    %               and the 2nd-5th columns are the corresponding quantum numbers for each energy levels
 
     N = N+1;
     
@@ -20,7 +20,7 @@ function Elev_labeled = Elev_label(Etot, Qtot, N, N_elev)
 
     Elevs = [];
     for it = 1:numel(Etot{N})
-        Elevs = cat(1, Elevs, Etot{N}{it}(:));
+        Elevs = cat(1, Elevs, sort(Etot{N}{it}(:)));
     end
 
     Qnums = [];

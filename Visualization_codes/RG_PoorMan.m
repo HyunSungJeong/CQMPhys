@@ -7,6 +7,7 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
     I = I0;
     log_D = log(D0)/log(10);
     order = 2;
+    dispD = false;
     
     while ~isempty(varargin)
         switch varargin{1}
@@ -17,6 +18,11 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
                 else
                     error('ERR: order of perturbation must be a interger greater than 1');
                 end
+
+            case '-v'
+                dispD = true;
+                varargin(1) = [];
+
             otherwise
                 error(['ERR: unknown option',varargin{1}]);
         end
@@ -91,7 +97,7 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
             log_D_out = [log_D_out, log_D];
         end
 
-        if rem(cnt,2e4) == 0
+        if rem(cnt,2e4) == 0 && dispD
             disp(log_D/log(10));
         end
         cnt = cnt + 1;

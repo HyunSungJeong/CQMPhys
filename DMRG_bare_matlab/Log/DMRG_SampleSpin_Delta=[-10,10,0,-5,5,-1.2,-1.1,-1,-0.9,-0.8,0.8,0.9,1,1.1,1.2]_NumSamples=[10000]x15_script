@@ -1,0 +1,26 @@
+#!/bin/bash
+#SBATCH --job-name=DMRG_SampleSpin_Delta=[-10,10,0,-5,5,-1.2,-1.1,-1,-0.9,-0.8,0.8,0.9,1,1.1,1.2]_NumSamples=[10000]x15
+#SBATCH --chdir=/project/hyunsung
+#SBATCH --output=/dev/null
+#SBATCH --error="%x_j%At%a_err.log"
+#SBATCH --partition=B2
+#SBATCH --mem=81920
+#SBATCH --time=119:59:59
+#SBATCH --export=NONE
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --nodes=1-1
+#SBATCH --array=1-15
+TMP_LOG_NAME=/project/hyunsung/DMRG_SampleSpin_Delta=[-10,10,0,-5,5,-1.2,-1.1,-1,-0.9,-0.8,0.8,0.9,1,1.1,1.2]_NumSamples=[10000]x15_j${SLURM_ARRAY_JOB_ID}t${SLURM_ARRAY_TASK_ID}.log
+echo "Host name: $HOSTNAME" 2>&1 >>${TMP_LOG_NAME}
+TMPDIR=/tmp/hyunsung/j${SLURM_ARRAY_JOB_ID}t${SLURM_ARRAY_TASK_ID} 2>&1 >>${TMP_LOG_NAME}
+echo "Temporary work dir.: $TMPDIR" 2>&1 >>${TMP_LOG_NAME}
+echo -e "ssh $HOSTNAME 'rm -rf ${TMPDIR}';" >> /project/hyunsung/cleanup_list.log
+mkdir -p ${TMPDIR} 2>&1 >>${TMP_LOG_NAME}
+export MCR_CACHE_ROOT=${TMPDIR} 2>&1 >>${TMP_LOG_NAME}
+rsync -vh /project/hyunsung/Compiled/run_SampleSpin_server.sh ${TMPDIR} 2>&1 >>${TMP_LOG_NAME}
+rsync -vh /project/hyunsung/Compiled/SampleSpin_server ${TMPDIR} 2>&1 >>${TMP_LOG_NAME}
+rsync -vh /project/hyunsung/Para/DMRG_SampleSpin_par_Delta=[-10,10,0,-5,5,-1.2,-1.1,-1,-0.9,-0.8,0.8,0.9,1,1.1,1.2]_NumSamples=[10000]x15.mat ${TMPDIR}/ 2>&1 >>${TMP_LOG_NAME}
+export MPNRG_BASE_PATH=/project/hyunsung/mpNRG
+${TMPDIR}/run_SampleSpin_server.sh /appl/MATLAB/R2021b ${TMPDIR}/DMRG_SampleSpin_par_Delta=[-10,10,0,-5,5,-1.2,-1.1,-1,-0.9,-0.8,0.8,0.9,1,1.1,1.2]_NumSamples=[10000]x15.mat 2>&1 >>${TMP_LOG_NAME}
+rm -rf ${TMPDIR} 2>&1 >>${TMP_LOG_NAME}

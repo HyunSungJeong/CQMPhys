@@ -281,11 +281,36 @@ if intmp == 1       % TsoK_NRG
         end
 
         if chosen(2)
+
+            %{}
+            logT_grid = log10(ocont(ocont>0));      % log temperature grid
+            log_Susc = cell(1,3);
+            log_Susc{1} = log10(ImpDyn{1}(ocont>0));
+            log_Susc{2} = log10(ImpDyn{2}(ocont>0));
+            log_Susc{3} = log10(ImpDyn{3}(ocont>0));
+    
+            log_Sp_Susc_1stDer = diff(log_Susc{1},1)./diff(logT_grid,1);      % first derivative
+            log_Orb_Susc_1stDer = diff(log_Susc{2},1)./diff(logT_grid,1);
+            log_SpOrb_Susc_1stDer = diff(log_Susc{3},1)./diff(logT_grid,1);
+            logT_grid_1stDer = movmean(logT_grid, [0,1]);           % log temperature grid for first derivative
+            logT_grid_1stDer = logT_grid_1stDer(1:end-1);
+
+            figure;
+            hold on;
+            ylim([-1.5,1]);
+            plot(logT_grid_1stDer, log_Sp_Susc_1stDer,'LineWidth',2);
+            plot(logT_grid_1stDer, log_Orb_Susc_1stDer,'LineWidth',2);
+            plot(logT_grid_1stDer, log_SpOrb_Susc_1stDer, '--', 'LineWidth',2);
+            plot([-25,0],[-1,-1],'--','Color','black','LineWidth',2);
+            plot([-25,0],[-1.1,-1.1],'--','Color','black','LineWidth',2);
+            plot([-25,0],[-1.2,-1.2],'--','Color','black','LineWidth',2);
+            hold off;
+            %}
     
             figure;
             hold on;
             linestyle = {'-', '-', '-'};
-            for it = (1:num_ImpDyn)
+            for it = 1:num_ImpDyn
                 plot(ocont(ocont < 1),ImpDyn{it}(ocont < 1),'Linewidth',2,'LineStyle',linestyle{it});
             end
             %xlim([1e-22,1]);
@@ -294,64 +319,15 @@ if intmp == 1       % TsoK_NRG
             ax.YAxis.FontSize = 5;
             legend(legends,'Location','best','FontSize',25);
 
-            %{
-            xlim([1e-25, 1]);
-            ylim([1e-5, 1e8]);
-            legend('AutoUpdate','off');
-            plot([power(10,-3.02), power(10,-3.065)], [1e12, 1e-5],'--','linewidth',2,'Color','#EDB120');
-            plot([power(10,-4.98), power(10,-4.98)], [1e12, 1e-5],'--','linewidth',2,'Color','blue');
-            legend('AutoUpdate','on');
-            %}
-            %{
-            xlim([1e-25, 1]);
-            ylim([1e-20, 1e6]);
-            legend('AutoUpdate','off');
-            plot([power(10,-7.135), power(10,-7.135)], [1e15, 1e-20],'--','linewidth',2,'Color','green');
-            plot([power(10,-6.16), power(10,-6.16)], [1e15, 1e-20],'--','linewidth',2,'Color','red');
-            plot([power(10,-5.775), power(10,-5.775)], [1e15, 1e-20],'--','linewidth',2,'Color','magenta');
-            plot([power(10,-3.065), power(10,-3.065)], [1e15, 1e-20],'--','linewidth',2,'Color','#EDB120');
-
-            legend('AutoUpdate','on');
-            %}
-            %{
-            xlim([1e-25, 1]);
-            ylim([1e-20, 1e5]);
-            legend('AutoUpdate','off');
-            plot([power(10,-4.245), power(10,-4.245)], [1e5, 1e-20],'--','linewidth',2,'Color','magenta');
-            plot([power(10,-4.49), power(10,-4.49)], [1e5, 1e-20],'--','linewidth',2,'Color',[.7, .7, .7]);
-            legend('AutoUpdate','on');
-            %}
-            %{
-            xlim([1e-25, 1]);
-            ylim([1e-20, 1e6]);
-            legend('AutoUpdate','off');
-            plot([power(10,-13.13), power(10,-13.13)], [1e15, 1e-20],'--','linewidth',2,'Color','green');
-            plot([power(10,-12.295), power(10,-12.295)], [1e15, 1e-20],'--','linewidth',2,'Color','red');
-            plot([power(10,-11.885), power(10,-11.885)], [1e15, 1e-20],'--','linewidth',2,'Color','black');
-            plot([power(10,-4.98), power(10,-4.98)], [1e15, 1e-20],'--','linewidth',2,'Color','blue');
-            plot([power(10,-3.065), power(10,-3.065)], [1e15, 1e-20],'--','linewidth',2,'Color','#EDB120');
-            
-            legend('AutoUpdate','on');
-            %}
-            %{
-            xlim([1e-25, 1]);
-            ylim([1e-20, 1e10]);
-            legend('AutoUpdate','off');
-            plot([power(10,-12.075), power(10,-12.075)], [1e15, 1e-20],'--','linewidth',2,'Color','green');
-            plot([power(10,-10.35), power(10,-10.35)], [1e15, 1e-20],'--','linewidth',2,'Color','red');
-            plot([power(10,-9.485), power(10,-9.485)], [1e15, 1e-20],'--','linewidth',2,'Color','magenta');
-            plot([power(10,-3.02), power(10,-3.02)], [1e15, 1e-20],'--','linewidth',2,'Color','#EDB120');
-            
-            legend('AutoUpdate','on');
-            %}
-
-            %{}
             legend('AutoUpdate','off');
             %fit_range = [-2, -3; -13, -18; -13, -18];
-            fit_range = [-14, -19; -13, -18; -13, -18];
+            %fit_range = [-14, -19; -13, -18; -13, -18];
+            fit_range = [-4, -8; -13, -18; -13, -18];
             %fit_range = [-15, -20; -16, -18; -16, -18];
            
-            log_ImpDyn = cat(1,log_ImpDyn,log_ImpDyn{1});
+            if num_ImpDyn < 3
+                log_ImpDyn = cat(1,log_ImpDyn,log_ImpDyn{1});
+            end
 
             [a1,Rsq1,a2,Rsq2,a3,Rsq3] = Insert(log_T, log_ImpDyn,fit_range);
 
@@ -363,7 +339,7 @@ if intmp == 1       % TsoK_NRG
             y1 = polyval(a1,x1)+0.5;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             plot(x1,y1,'-','Color',[0,0,0],'LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',15);
 
@@ -375,7 +351,7 @@ if intmp == 1       % TsoK_NRG
             y2 = polyval(a2,x2)+0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color',[0,0,0],'LineWidth',1);
             text(text_x, text_y, text2,'Interpreter','latex','FontSize',15);
             
@@ -388,7 +364,7 @@ if intmp == 1       % TsoK_NRG
             y3 = polyval(a3,x3) - 0.5;
             x3 = power(10,x3);
             y3 = power(10,y3);
-            text3 = ['$w^{',sprintf('%.2f',a3(1)),'}$'];
+            text3 = ['$\omega^{',sprintf('%.2f',a3(1)),'}$'];
             plot(x3,y3,'-','Color',[0,0,0],'LineWidth',1);
             text(text_x, text_y, text3,'Interpreter','latex','FontSize',15);
             legend('AutoUpdate','on');
@@ -400,7 +376,7 @@ if intmp == 1       % TsoK_NRG
             set(gca,'XScale','log','YScale','log','fontsize',20);
             xlabel('$\omega$','Interpreter','latex','FontSize',25);
             ylabel('$\chi^{\mathrm{imp}} (\omega)$','Interpreter','latex','FontSize',25);
-            title(['Impurity Dynamical Susceptibilities (J0,K0,I0) = (', ...
+            title(['Impurity Dynamic Susceptibilities (J0,K0,I0) = (', ...
                         sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I0),'), T=',sprintf('%.15g',T)],'FontSize',20);
             hold off;
         end
@@ -432,7 +408,7 @@ if intmp == 1       % TsoK_NRG
             set(gca,'XScale','linear','YScale','linear','fontsize',20);
             xlabel('$\log T$','Interpreter','latex','FontSize',25);
             ylabel('$\frac{d^{2} \log \chi''''}{d^{2} \log T} (\omega)$','Interpreter','latex','FontSize',25);
-            title(['2nd Derivatives of Impurity Dynamical Susceptibilities (J0,K0,I0) = (',sprintf('%.15g',J0), ...
+            title(['2nd Derivatives of Impurity Dynamic Susceptibilities (J0,K0,I0) = (',sprintf('%.15g',J0), ...
                         ', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I0),'), T=',sprintf('%.15g',T)],'FontSize',15);
             hold off;
         end
@@ -476,9 +452,30 @@ if intmp == 1       % TsoK_NRG
         
         if chosen(4)
 
+            %{}
+            logT_grid = log10(ocont(ocont>0));      % log temperature grid
+            log_Susc = cell(1,2);
+            log_Susc{1} = log10(BathDyn{1}(ocont>0));
+            log_Susc{2} = log10(BathDyn{2}(ocont>0));
+    
+            log_Sp_Susc_1stDer = diff(log_Susc{1},1)./diff(logT_grid,1);      % first derivative
+            log_Orb_Susc_1stDer = diff(log_Susc{2},1)./diff(logT_grid,1);
+            logT_grid_1stDer = movmean(logT_grid, [0,1]);           % log temperature grid for first derivative
+            logT_grid_1stDer = logT_grid_1stDer(1:end-1);
+
             figure;
             hold on;
-            legends = cell(0,0);
+            ylim([-1.5,1]);
+            plot(logT_grid_1stDer, log_Sp_Susc_1stDer,'LineWidth',2);
+            plot(logT_grid_1stDer, log_Orb_Susc_1stDer,'LineWidth',2);
+            plot([-25,0],[-1,-1],'--','Color','black','LineWidth',2);
+            plot([-25,0],[-1.1,-1.1],'--','Color','black','LineWidth',2);
+            plot([-25,0],[-1.2,-1.2],'--','Color','black','LineWidth',2);
+            hold off;
+            %}
+
+            figure;
+            hold on;
             for it = (1:num_BathDyn)
                 plot(ocont(ocont < 1),BathDyn{it}(ocont < 1),'Linewidth',2);
             end
@@ -489,8 +486,10 @@ if intmp == 1       % TsoK_NRG
             set(gca,'XScale','log','YScale','log','fontsize',20);
             xlabel('$\omega$','Interpreter','latex','FontSize',25);
             ylabel('$\chi'''' (\omega)$','Interpreter','latex','FontSize',25);
-            title(['Bath Dynamical Susceptibilities (J0,K0,I0) = (', ...
+            title(['Bath Dynamic Susceptibilities (J0,K0,I0) = (', ...
                         sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I0),'), T=',sprintf('%.15g',T)],'FontSize',20);
+
+            
             hold off;
         end
 
@@ -519,7 +518,7 @@ if intmp == 1       % TsoK_NRG
             set(gca,'XScale','linear','YScale','linear','fontsize',20);
             xlabel('$\log T$','Interpreter','latex','FontSize',25);
             ylabel('$\frac{d^{2} \log \chi''''}{d^{2} \log T} (\omega)$','Interpreter','latex','FontSize',25);
-            title(['2nd Derivatives of Bath Dynamical Susceptibilities (J0,K0,I0) = (',sprintf('%.15g',J0), ...
+            title(['2nd Derivatives of Bath Dynamic Susceptibilities (J0,K0,I0) = (',sprintf('%.15g',J0), ...
                         ', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I0),'), T=',sprintf('%.15g',T)],'FontSize',15);
             hold off;
         end
@@ -528,10 +527,18 @@ if intmp == 1       % TsoK_NRG
 
     if avail(6) && chosen(6)
 
-        figure;
+        figure('Position', [100, 100, 800, 350]);
         hold on;
-        plot(Temps,exp(Sent_imp),'Linewidth',1.5);
-        xlim([1e-22,1]);
+
+        set(gca, 'XScale', 'log', 'YScale', 'linear', 'FontSize', 18);
+        set(gca, 'XTick', 10.^(-15:5:0));
+        set(gca, 'FontSize', 24);
+        set(gca, 'LineWidth', 1);  % make axis lines (incl. ticks) bold
+        set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on');
+        set(gca, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
+
+        plot(Temps,exp(Sent_imp),'Linewidth',2);
+        xlim([1e-18,1]);
         ylim([1,4.1])
         plot([1e-22,1],[sqrt(8),sqrt(8)],'--','LineWidth',1,'color',[.7,.7,.7]);
         yaxisproperties= get(gca, 'YAxis');
@@ -540,42 +547,12 @@ if intmp == 1       % TsoK_NRG
         ticks = {'1','2','$2 \times \sqrt{2}$','4'};
         yticklabels(ticks);
         yticks([1,2,sqrt(8),4]);
-        %{
-        plot([power(10,-3.02), power(10,-3.065)], [1e12, 1e-5],'--','linewidth',2,'Color','#EDB120');
-        plot([power(10,-4.98), power(10,-4.98)], [1e12, 1e-5],'--','linewidth',2,'Color','blue');
-        %}
-        %{
-        plot([power(10,-7.135), power(10,-7.135)], [1e15, 1e-20],'--','linewidth',2,'Color','green');
-        plot([power(10,-6.16), power(10,-6.16)], [1e15, 1e-20],'--','linewidth',2,'Color','red');
-        plot([power(10,-5.775), power(10,-5.775)], [1e15, 1e-20],'--','linewidth',2,'Color','magenta');
-        plot([power(10,-3.065), power(10,-3.065)], [1e15, 1e-20],'--','linewidth',2,'Color','#EDB120');
-        %}
-        %{
-        plot([power(10,-4.245), power(10,-4.245)], [1e5, 1e-20],'--','linewidth',2,'Color','magenta');
-        plot([power(10,-4.49), power(10,-4.49)], [1e5, 1e-20],'--','linewidth',2,'Color',[.7, .7, .7]);
-        %}
-        %{
-        plot([power(10,-13.13), power(10,-13.13)], [1e15, 1e-20],'--','linewidth',2,'Color','green');
-        plot([power(10,-12.295), power(10,-12.295)], [1e15, 1e-20],'--','linewidth',2,'Color','red');
-        plot([power(10,-11.885), power(10,-11.885)], [1e15, 1e-20],'--','linewidth',2,'Color','black');
-        plot([power(10,-4.98), power(10,-4.98)], [1e15, 1e-20],'--','linewidth',2,'Color','blue');
-        plot([power(10,-3.065), power(10,-3.065)], [1e15, 1e-20],'--','linewidth',2,'Color','#EDB120');
-        %}
-        %{
-        plot([power(10,-12.075), power(10,-12.075)], [1e15, 1e-20],'--','linewidth',2,'Color','green');
-        plot([power(10,-10.35), power(10,-10.35)], [1e15, 1e-20],'--','linewidth',2,'Color','red');
-        plot([power(10,-9.485), power(10,-9.485)], [1e15, 1e-20],'--','linewidth',2,'Color','magenta');
-        plot([power(10,-3.02), power(10,-3.02)], [1e15, 1e-20],'--','linewidth',2,'Color','#EDB120');
-        %}
 
         ax = gca;
-        ax.XAxis.FontSize = 5;
-        ax.YAxis.FontSize = 5;
-        set(gca,'XScale','log','YScale','linear','fontsize',20);
-        xlabel('T','Interpreter','latex','FontSize',25);
-        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',25);
-        title(['Impurity contribution to entropy (J0,K0,I0)= (', ...
-                    sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I0),'), T=',sprintf('%.15g',T)],'FontSize',20);
+        xlabel('$T$','Interpreter','latex','FontSize',27);
+        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',27);
+        %title(['Impurity contribution to entropy (J0,K0,I0)= (', ...
+        %            sprintf('%.15g',J0),', ',sprintf('%.15g',K0),', ',sprintf('%.15g',I0),'), T=',sprintf('%.15g',T)],'FontSize',20);
         hold off;
     end
     
@@ -598,6 +575,16 @@ if intmp == 1       % TsoK_NRG
         plot(X_odd,Orb_odd,'-','LineWidth',1.5);
         plot(X_even,Sp_even,'-.','LineWidth',1.5);
         plot(X_even,Orb_even,'-.','LineWidth',1.5);
+        Sp_sum = zeros(1,45);
+        Orb_sum = zeros(1,45);
+        for it = 1:45
+            Sp_sum(it) = sum(Sp_in(1:2*it));
+            Orb_sum(it) = sum(Orb_in(1:2*it));
+        end
+        plot(2.^-(2:2:90), Sp_sum);
+        plot(2.^-(2:2:90), Orb_sum);
+        plot(2.^-(1:90), zeros(1,90), '--', 'Color', [.5,.5,.5]);
+        ylim([-0.03, 0.01]);
         xlim([X(end),X(1)]);
         ax=gca;
         ax.XAxis.FontSize = 15;
@@ -731,6 +718,9 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             case 'Sent_imp.mat'
                 Sent_imp = getfield(tmp, field{1});
                 avail(6) = true;
+            case 'Sent_imp_beta=1.5.mat'
+                Sent_imp = getfield(tmp, field{1});
+                avail(6) = true;
             case 'Temps.mat'
                 Temps = getfield(tmp, field{1});
             case 'spin_spin_correlators.mat'
@@ -819,7 +809,7 @@ elseif intmp == 2   % TsoK_Aniso_NRG
 
         %{}
         plotE(Eflow{1}, Eflow{2}, 'title', ['$J_{0}=',sprintf('%.15g',J0),'\, K_{\perp}=',sprintf('%.15g',K_perp),'\, K_{z}=',sprintf('%.15g',K_z),'\, I_{0}=',sprintf('%.15g',I0),'$'], ...
-                                                'Emax',1.3,'legmax',8,'Qdiff',[0,0,0]);
+                                                'Emax',2,'legmax',15,'Qdiff',[0,0,0]);
         %}
     end
 
@@ -905,9 +895,9 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             y1 = polyval(a1,x1)+0.5;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            %text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            %text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             %
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             %
             plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
@@ -920,7 +910,7 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             y2 = polyval(a2,x2)+0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color',[0.85,0.325,0.098],'LineWidth',1);
             text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
 
@@ -932,7 +922,7 @@ elseif intmp == 2   % TsoK_Aniso_NRG
             y3 = polyval(a3,x3) - 0.5;
             x3 = power(10,x3);
             y3 = power(10,y3);
-            text3 = ['$w^{',sprintf('%.2f',a3(1)),'}$'];
+            text3 = ['$\omega^{',sprintf('%.2f',a3(1)),'}$'];
             plot(x3,y3,'-','Color',[0.929,0.694,0.125],'LineWidth',1);
             text(text_x, text_y, text3,'Interpreter','latex','FontSize',20);
             legend('AutoUpdate','on');
@@ -1064,12 +1054,20 @@ elseif intmp == 2   % TsoK_Aniso_NRG
 
     if avail(6) && chosen(6)
 
-        figure;
+        figure('Position', [100, 100, 800, 350]);
         hold on;
-        plot(Temps,exp(Sent_imp),'Linewidth',2);
-        xlim([1e-22,1]);
+
+        set(gca, 'XScale', 'log', 'YScale', 'linear', 'FontSize', 18);
+        set(gca, 'XTick', 10.^(-15:5:0));
+        set(gca, 'FontSize', 24);
+        set(gca, 'LineWidth', 2);  % make axis lines (incl. ticks) bold
+        set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on');
+        set(gca, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
+
+        plot(Temps,exp(Sent_imp),'Linewidth',1.5);
+        xlim([1e-18,1]);
         ylim([1,4.1])
-        plot([1e-22,1],[sqrt(8),sqrt(8)],'--','LineWidth',1.5,'color',[.7,.7,.7]);
+        plot([1e-22,1],[sqrt(8),sqrt(8)],'--','LineWidth',1,'color',[.7,.7,.7]);
         yaxisproperties= get(gca, 'YAxis');
         yaxisproperties.TickLabelInterpreter = 'tex';
         set(gca, 'TickLabelInterpreter', 'latex');
@@ -1077,16 +1075,11 @@ elseif intmp == 2   % TsoK_Aniso_NRG
         yticklabels(ticks);
         yticks([1,2,sqrt(8),4]);
 
-        ax = gca;
-        ax.XAxis.FontSize = 5;
-        ax.YAxis.FontSize = 5;
-        set(gca,'XScale','log','YScale','linear','fontsize',25);
-        xlabel('T','Interpreter','latex','FontSize',30);
-        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',30);
-        title('$\mathrm{Impurity \ contribution \ to \ entropy}$','Interpreter','latex','FontSize',30);
-        %{
-        title(['$\mathrm{Impurity \ contribution \ to \ entropy} \ (J_{0}, K_{\perp}, K_{z}, I_{0}) = (', ...
-                        sprintf('%.15g',J0),', ',sprintf('%.15g',K_perp),', ',sprintf('%.15g',K_z),', ',sprintf('%.15g',I0),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+        xlabel('T','Interpreter','latex','FontSize',27);
+        ylabel('$\mathrm{exp}(S_{\mathrm{imp}})$','Interpreter','latex','FontSize',27);
+        %title('$\mathrm{Impurity \ contribution \ to \ entropy}$','Interpreter','latex','FontSize',30);
+        %{}
+        title(['$ J_{0}=', sprintf('%.15g',J0),',K_{\perp}=',sprintf('%.15g',K_perp),',K_{z}=',sprintf('%.15g',K_z),'$'],'Interpreter','latex','FontSize',20);
         %}
         hold off;
     end
@@ -1487,7 +1480,7 @@ elseif intmp == 3           %% TCK_Aniso
             y1 = polyval(a1,x1)+0.5;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             plot(x1,y1,'-','Color',[0,0,0],'LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',15);
 
@@ -1499,7 +1492,7 @@ elseif intmp == 3           %% TCK_Aniso
             y2 = polyval(a2,x2)+0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color',[0,0,0],'LineWidth',1);
             text(text_x, text_y, text2,'Interpreter','latex','FontSize',15);
 
@@ -1511,7 +1504,7 @@ elseif intmp == 3           %% TCK_Aniso
             y3 = polyval(a3,x3) - 0.5;
             x3 = power(10,x3);
             y3 = power(10,y3);
-            text3 = ['$w^{',sprintf('%.2f',a3(1)),'}$'];
+            text3 = ['$\omega^{',sprintf('%.2f',a3(1)),'}$'];
             plot(x3,y3,'-','Color',[0,0,0],'LineWidth',1);
             text(text_x, text_y, text3,'Interpreter','latex','FontSize',15);
             legend('AutoUpdate','on');
@@ -1869,15 +1862,15 @@ elseif intmp == 4       %% Kondo_Aniso_NRG
 
             set(gca,'XScale','log','YScale','log','FontSize',20);
             xlabel('$\omega$','Interpreter','latex','FontSize',25);
-            ylabel('$\chi_{\mathrm{imp}} (\omega)$','Interpreter','latex','FontSize',25);
+            ylabel('$\chi^{\mathrm{imp}} (\omega)$','Interpreter','latex','FontSize',25);
             title(['$ \mathrm{Impurity \ Dynamic \ Susceptibilities} \ (J_{\perp}, J_z) = (', ...
                         sprintf('%.15g',J_perp),', ',sprintf('%.15g',J_z),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
 
             %{}
             legend('AutoUpdate','off');
             log_ImpDyn = cat(1,log_ImpDyn,log_ImpDyn(1));
-            %fit_range = [-13, -15; -13, -15; 0, 0];
-            fit_range = [-7, -12; -7, -12; 0, 0];
+            fit_range = [-4, -7; -4, -7; 0, 0];
+            %fit_range = [-7, -12; -7, -12; 0, 0];
             [a1,Rsq1,a2,Rsq2,a3,Rsq3] = Insert(log_T, log_ImpDyn,fit_range);
 
             x1 = fit_range(1,:);
@@ -1891,7 +1884,7 @@ elseif intmp == 4       %% Kondo_Aniso_NRG
             y1 = polyval(a1,x1) + 0.5;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             plot(x1,y1,'-','Color',[0 0.4470 0.7410],'LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',15);
 
@@ -1906,50 +1899,8 @@ elseif intmp == 4       %% Kondo_Aniso_NRG
             y2 = polyval(a2,x2) - 0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color',[0.8500 0.3250 0.0980],'LineWidth',1);
-            text(text_x, text_y, text2,'Interpreter','latex','FontSize',15);
-
-            log_ImpDyn(3) = [];
-            %}
-
-            %{
-            legend('AutoUpdate','off');
-            log_ImpDyn = cat(1,log_ImpDyn,log_ImpDyn(1));
-            %fit_range = [-14.5, -16; -14.5, -16; 0, 0];
-            fit_range = [-3, -7; -3, -7; 0, 0];
-            %fit_range = [-7, -12; -7, -12; 0, 0];
-            [a1,Rsq1,a2,Rsq2,a3,Rsq3] = Insert(log_T, log_ImpDyn,fit_range);
-
-            x1 = fit_range(1,:);
-            %text_x = (x1(1)+x1(2))/2;
-            %text_y = polyval(a1,text_x) + 1;
-            text_x = (x1(1)+x1(2))/2;
-            text_y = polyval(a1,text_x) + 1;
-
-            text_x = power(10, text_x);
-            text_y = power(10, text_y);
-            y1 = polyval(a1,x1) + 0.5;
-            x1 = power(10,x1);
-            y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
-            plot(x1,y1,'-','Color',[0 0.4470 0.7410],'LineWidth',1);
-            text(text_x, text_y, text1,'Interpreter','latex','FontSize',15);
-
-            x2 = fit_range(2,:);
-            %text_x = (x2(1)+x2(2))/2;
-            %text_y = polyval(a2,text_x) - 1.8;
-            text_x = (x2(1)+x2(2))/2 - 0.5;
-            text_y = polyval(a2,text_x) - 2;
-
-            text_x = power(10, text_x);
-            text_y = power(10, text_y);
-            y2 = polyval(a2,x2) - 0.5;
-            x2 = power(10,x2);
-            y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
-            plot(x2,y2,'-','Color',[0.8500 0.3250 0.0980],'LineWidth',1);
-            xlim([1e-16,1]);
             text(text_x, text_y, text2,'Interpreter','latex','FontSize',15);
 
             log_ImpDyn(3) = [];
@@ -2040,9 +1991,48 @@ elseif intmp == 4       %% Kondo_Aniso_NRG
             legend(legends,'Interpreter','latex','Location','best','FontSize',25);
             set(gca,'XScale','log','YScale','log','fontsize',20);
             xlabel('$\omega$','Interpreter','latex','FontSize',25);
-            ylabel('$\chi'''' (\omega)$','Interpreter','latex','FontSize',25);
+            ylabel('$\chi^{\mathrm{bath}} (\omega)$','Interpreter','latex','FontSize',25);
             title(['$\mathrm{Bath \ Dynamic \ Susceptibilities} \ (J_{\perp}, J_{z}) = (', ...
                         sprintf('%.15g',J_perp),', ',sprintf('%.15g',J_z),'), T=10^{',sprintf('%d',round(log(T)/log(10))),'}$'],'Interpreter','latex','FontSize',20);
+
+            legend('AutoUpdate','off');
+            log_BathDyn = cat(1,log_BathDyn,log_BathDyn(1));
+            fit_range = [-4, -7; -4, -7; 0, 0];
+            %fit_range = [-7, -12; -7, -12; 0, 0];
+            [a1,Rsq1,a2,Rsq2,a3,Rsq3] = Insert(log_T, log_BathDyn,fit_range);
+
+            x1 = fit_range(1,:);
+            text_x = (x1(1)+x1(2))/2;
+            text_y = polyval(a1,text_x) + 1.3;
+            %text_x = (x1(1)+x1(2))/2 - 0.3;
+            %text_y = polyval(a1,text_x) + 1.2;
+
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y1 = polyval(a1,x1) + 0.5;
+            x1 = power(10,x1);
+            y1 = power(10,y1);
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
+            plot(x1,y1,'-','Color',[0 0.4470 0.7410],'LineWidth',1);
+            text(text_x, text_y, text1,'Interpreter','latex','FontSize',15);
+
+            x2 = fit_range(2,:);
+            text_x = (x2(1)+x2(2))/2;
+            text_y = polyval(a2,text_x) - 1;
+            %text_x = (x2(1)+x2(2))/2;
+            %text_y = polyval(a2,text_x) - 0.8;
+
+            text_x = power(10, text_x);
+            text_y = power(10, text_y);
+            y2 = polyval(a2,x2) - 0.5;
+            x2 = power(10,x2);
+            y2 = power(10,y2);
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
+            plot(x2,y2,'-','Color',[0.8500 0.3250 0.0980],'LineWidth',1);
+            text(text_x, text_y, text2,'Interpreter','latex','FontSize',15);
+
+            log_BathDyn(3) = [];
+
             hold off;
         end
 
@@ -2351,7 +2341,7 @@ elseif intmp == 5   % ThsoK_NRG
             y1 = polyval(a1,x1)+0.5;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',15);
 
@@ -2363,7 +2353,7 @@ elseif intmp == 5   % ThsoK_NRG
             y2 = polyval(a2,x2)+0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color',[0.85,0.325,0.098],'LineWidth',1);
             text(text_x, text_y, text2,'Interpreter','latex','FontSize',15);
 
@@ -2375,7 +2365,7 @@ elseif intmp == 5   % ThsoK_NRG
             y3 = polyval(a3,x3) - 0.5;
             x3 = power(10,x3);
             y3 = power(10,y3);
-            text3 = ['$w^{',sprintf('%.2f',a3(1)),'}$'];
+            text3 = ['$\omega^{',sprintf('%.2f',a3(1)),'}$'];
             plot(x3,y3,'-','Color',[0.929,0.694,0.125],'LineWidth',1);
             text(text_x, text_y, text3,'Interpreter','latex','FontSize',15);
             legend('AutoUpdate','on');
@@ -2972,7 +2962,7 @@ elseif intmp == 6   % Quartic_NRG
             y1 = polyval(a1,x1) + 0.15;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             %plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
             plot(x1,y1,'-','Color','black','LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
@@ -2986,7 +2976,7 @@ elseif intmp == 6   % Quartic_NRG
             y2 = polyval(a2,x2)+0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color','black','LineWidth',1);
             text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
             %}
@@ -3097,7 +3087,7 @@ elseif intmp == 6   % Quartic_NRG
             y1 = polyval(a1,x1) - 0.5;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             %plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
             plot(x1,y1,'-','Color','black','LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
@@ -3110,7 +3100,7 @@ elseif intmp == 6   % Quartic_NRG
             y2 = polyval(a2,x2)+0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             %plot(x2,y2,'-','Color','black','LineWidth',1);
             %plot(x2,y2,'-','Color',[0.85,0.325,0.098],'LineWidth',1);
             %text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
@@ -3123,7 +3113,7 @@ elseif intmp == 6   % Quartic_NRG
             y3 = polyval(a3,x3) + 0.5;
             x3 = power(10,x3);
             y3 = power(10,y3);
-            text3 = ['$w^{',sprintf('%.2f',a3(1)),'}$'];
+            text3 = ['$\omega^{',sprintf('%.2f',a3(1)),'}$'];
             %plot(x3,y3,'-','Color',[0.929,0.694,0.125],'LineWidth',1);
             plot(x3,y3,'-','Color','black','LineWidth',1);
             text(text_x, text_y, text3,'Interpreter','latex','FontSize',20);
@@ -3618,7 +3608,7 @@ elseif intmp == 7   % Anderson_8flav_NRG
             y1 = polyval(a1,x1) + 0.15;
             x1 = power(10,x1);
             y1 = power(10,y1);
-            text1 = ['$w^{',sprintf('%.2f',a1(1)),'}$'];
+            text1 = ['$\omega^{',sprintf('%.2f',a1(1)),'}$'];
             %plot(x1,y1,'-','Color',[0, 0.447,0.741],'LineWidth',1);
             plot(x1,y1,'-','Color','black','LineWidth',1);
             text(text_x, text_y, text1,'Interpreter','latex','FontSize',20);
@@ -3632,7 +3622,7 @@ elseif intmp == 7   % Anderson_8flav_NRG
             y2 = polyval(a2,x2)+0.5;
             x2 = power(10,x2);
             y2 = power(10,y2);
-            text2 = ['$w^{',sprintf('%.2f',a2(1)),'}$'];
+            text2 = ['$\omega^{',sprintf('%.2f',a2(1)),'}$'];
             plot(x2,y2,'-','Color','black','LineWidth',1);
             text(text_x, text_y, text2,'Interpreter','latex','FontSize',20);
             %}

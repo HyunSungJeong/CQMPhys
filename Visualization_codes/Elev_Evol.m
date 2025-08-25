@@ -79,7 +79,7 @@ function Elev_Evol(N, N_elev, Nshow)
     Elev_ev = cell(1,numel(K_z));
 
     for it = 1:numel(K_z)
-        path = 'C:\Users\82104\Documents\Physics\Research\data\Quartic\K_z=';
+        path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\Quartic\K_z=';
         path = [path, num2str(K_z(it))];
         path = [path, '_Q=', num2str(Q(it)), '_T=1e-24_Nkeep=3000'];
 

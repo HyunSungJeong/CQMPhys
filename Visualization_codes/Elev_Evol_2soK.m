@@ -73,7 +73,7 @@ function Elev_Evol_2soK(J0, K_perp, N, N_elev, Nshow)
     Elev_ev = cell(1,numel(K_z));
 
     for it = 1:numel(K_perp)
-        path = ['C:\Users\82104\Documents\Physics\Research\data\TsoK_Aniso\J0=',num2str(J0),'_K_perp='];
+        path = ['C:\Users\hsjun\OneDrive\Physics\Research\data\TsoK_Aniso\J0=',num2str(J0),'_K_perp='];
         path = [path, num2str(K_perp(it))];
         path = [path, '_K_z=', num2str(K_z(it)), '_I0=0_T=1e-24_Nkeep=3000'];
 

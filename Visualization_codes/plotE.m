@@ -70,8 +70,8 @@ function varargout = plotE (varargin)
 %       used to appear in title.
 %       (Default: [], so draws the conventional energy flow)
 % 'dE', .. : [real scalar] Tolerance to determine the emergent degeneracy
-%           (not from the non-Abelian symmetry implemented) of eigenstates
-%           (Default: 1e-3)
+%       (not from the non-Abelian symmetry implemented) of eigenstates
+%       (Default: 1e-2)
 % 'Emax', .. : [real scalar] Upper bound of energy to show (Default: 3)
 % 'isFAdded', .. : [logical array] The output of NRG_SL, which is
 %       contained in (nrgdata)_info.mat or in the output struct. (For
@@ -151,9 +151,8 @@ function varargout = plotE (varargin)
 %       for individual lines were not properly rounded, so small noise
 %       (double-precision error) could differentiate the lines which are of
 %       the same quantum numbers. Now this problem is fixed.
-% Updated by S.Lee (May 02,2019): Use 'parseQSpace' for parsing the inputs
-%       supposed to be QSpace; improved compatibility with AW's
-%       NRGWilsonQS.
+% Updated by S.Lee (Jul.12,2024): Fixed a typo in the documentation of 'dE'
+%       option.
 
 
 % % % % for debugging
@@ -316,7 +315,6 @@ if any(intype == [1 3]) % usage #1 : read from NRG .mat data
                     end
                 end
             end
-            HK = parseQSpace(HK);
             
             if itN == 1
                 [~,Ieig] = eigQS(HK); % At the 1st iteration ('..._00.mat'), HK is not diagonalized but just a matrix.
@@ -354,9 +352,7 @@ if any(intype == [1 3]) % usage #1 : read from NRG .mat data
                         
                     end
                 end
-                HK = parseQSpace(HK);
                 % Note: HK's name is HK (for code-writing convenience), but the content *will* be 'rho'
-                AK = parseQSpace(AK);
                 
                 zdims = getzdim(HK,1,'-p');
                 Ztot = 0;
@@ -377,7 +373,6 @@ if any(intype == [1 3]) % usage #1 : read from NRG .mat data
                 if isempty(AK) || isempty(AK.data) % if there is no kept states
                     error(['ERR: No kept states in ''',nrgdata,'_',sprintf('%02i',itN-1),'.mat''?']);
                 end
-                AK = parseQSpace(AK);
             end
             
             if itN <= Nshow

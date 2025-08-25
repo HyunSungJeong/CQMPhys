@@ -8,9 +8,14 @@ function MPO = getMPO(ChainLen, varargin)
     % <Options>
     % 'TBchain', ... : [numeric vector] length L-1 vector containing the
     %                       hopping parameters of a length L tight-binding chain
+    %
     % '1DHubbard', ... : [numeric] Hubbard U of the 1D Hubbard model. 
     %                       The hopping parameters are taken to be all 1
-    % 'XXZ', ... [numeric] Anisotropy \Delta of the XXZ Heisenberg chain
+    %
+    % 'XXZ', ... : [numeric] Anisotropy \Delta of the XXZ Heisenberg chain
+    %
+    % '1DHaldane', ... : [numeric] Antiferromagnetic coupling in Haldane chain
+    % 
     % 'PBC' : If used, periodic boundary condition is applied.
     %           (Default: not used)
     %
@@ -74,6 +79,18 @@ function MPO = getMPO(ChainLen, varargin)
                     varargin(1:2) = [];
                 else
                     error('ERR: Delta for ''1DHubbard'' must be a number');
+                end
+
+            case '1DHaldane'
+                if isnumeric(varargin{2})
+                    System = '1DHaldane';
+                    J = varargin{2};
+                    varargin(1:2) = [];
+                    if J <= 0
+                        disp('WRN: J must be antiferromagnetic(J>0) for the Haldane chain');
+                    end
+                else
+                    error('ERR: J for ''1DHaldane'' must be a number');
                 end
 
             case 'PBC'
@@ -187,6 +204,29 @@ function MPO = getMPO(ChainLen, varargin)
                 MPO{it}(:,:,5,2) = S_r / sqrt(2);
                 MPO{it}(:,:,5,3) = Delta*Sz;
                 MPO{it}(:,:,5,4) = S_l / sqrt(2);
+                MPO{it}(:,:,5,5) = I;
+            end
+
+            if ~PBC
+                MPO{1} = MPO{1}(:,:,end,:);
+                MPO{end} = MPO{end}(:,:,:,1);
+            end
+
+        case '1DHaldane'
+
+            [S,I] = getLocalSpace('Spin',1);
+            MPO = cell(1,ChainLen);
+
+            for it = 1:ChainLen
+                MPO{it} = zeros(3,3,5,5);
+                MPO{it}(:,:,1,1) = I;
+                MPO{it}(:,:,2,1) = S(:,:,1).';
+                MPO{it}(:,:,3,1) = S(:,:,2).';
+                MPO{it}(:,:,4,1) = S(:,:,3).';
+
+                MPO{it}(:,:,5,2) = J*S(:,:,1);
+                MPO{it}(:,:,5,3) = J*S(:,:,2);
+                MPO{it}(:,:,5,4) = J*S(:,:,3);
                 MPO{it}(:,:,5,5) = I;
             end
 

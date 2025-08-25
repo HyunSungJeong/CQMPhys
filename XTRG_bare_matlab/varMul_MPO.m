@@ -12,7 +12,6 @@ function MPO_prod = varMul_MPO(MPO1, MPO2, Nkeep, Nsweep, varargin)
     % Nsweep : [numeric] The number of sweeps(left --> right & right --> left pairs) to perform in the variational multiplication
     % 
     % <Option>
-    %
     % '-v' : If used, the information of sweep is displayed
     %           (Default: not used)
     %
@@ -57,7 +56,7 @@ function MPO_prod = varMul_MPO(MPO1, MPO2, Nkeep, Nsweep, varargin)
             case '-v'
                 display = true;
                 varargin(1) = [];
-
+                
             otherwise 
                 if ischar(varargin{1})
                     error(['ERR: Unknown input ''',varargin{1},'''']);

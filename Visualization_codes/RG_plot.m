@@ -1,40 +1,49 @@
-clear;
-order = 3;
-J0 = 0.1;
-K0 = 0.3;
-I0 = 1e-6;
-[J1,K1,I1,log_D] = RG_PoorMan(J0,K0,0,'order',order);
-[J2,K2,I2,log_D] = RG_PoorMan(J0,K0,I0,'order',order);
-figure;
-hold on;
-legend('AutoUpdate','on');
-%{}
-%plot(log_D/log(10),J1,'Color','red','LineWidth',1,'LineStyle','-');
-%plot(log_D/log(10),K1,'Color','green','LineWidth',1,'LineStyle','-');
-%plot(log_D/log(10),J2,'Color','red','LineWidth',1,'LineStyle','--');
-%plot(log_D/log(10),K2,'Color','green','LineWidth',1,'LineStyle','--');
-%plot(log_D/log(10),I2,'Color','blue','LineWidth',1,'LineStyle','--');
-set(gca,'XScale','linear','YScale','log','fontsize',25);
-%ylim([-0.5,5]);
-%ylim([1e-2,1e+1]);
-%}
-%
-X = {log_D/log(10), log_D/log(10), log_D/log(10), log_D/log(10), log_D/log(10)};
-Y = {J1,K1,J2,K2,I2};
-%Y = {nan,nan,J2,K2,I2};
-color = {'red', 'green', 'red', 'green', 'blue'};
-style = {'-','-.','-','-','-'};
-%style = {'.','.','.','.','.'};
-num = 5;
-%SymLogPlot(X(3:num),Y(3:num),color(3:num),'XScale','linear','YScale','symlog','LineWidth',1,'style',style(3:end));
-SymLogPlot(X(1:2),Y(1:2),color(1:2),'XScale','linear','YScale','symlog','LineWidth',1,'style',style(1:2));
-%
-legends = {'$J: I_{0}=0$', '$K: I_{0}=0$', ['$J: I_{0}=',sprintf('%.15g',I0),'$'], ...
-            ['$K: I_{0}=',sprintf('%.15g',I0),'$'], ['$I: I_{0}=',sprintf('%.15g',I0),'$']};
-%legend(legends(3:5),'Interpreter','latex','Location','best','FontSize',20);
-legend(legends(1:2),'Interpreter','latex','Location','best','FontSize',20);
+function RG_plot(J0, K0, I0, order)
 
-xlabel('$\log_{10} \frac{D}{D_{0}}$','Interpreter','latex','FontSize',25);
-%ylabel('Parameter Values','Interpreter','latex','FontSize',25);
-title(['RG flow by poor man''s scaling($J_{0}=',sprintf('%.15g',J0),',K_{0}=',sprintf('%.15g',K0),')$']...
-            ,'Interpreter','latex','FontSize',15);
+    Dmin = 1e-9; 
+    D0 = 1;
+    
+    [J,K,I,log_D] = RG_PoorMan(J0,K0,I0,'order',order);
+
+    RGB = orderedcolors('gem');
+    blue = RGB(1,:);
+    orange = RGB(2,:);
+    green = RGB(5,:);
+
+    figure('Position', [100, 100, 800, 350]);   % left, bottom, width, height
+    hold on;
+
+    if I0 == 0
+        yticks = 0:0.5:1;
+        ymax = 1;
+    else
+        yticks = 0:4;
+        ymax = 4;
+    end
+
+    set(gca, 'XScale', 'log', 'YScale', 'linear', 'FontSize', 18);
+    set(gca, 'XTick', 10.^(-9:3:0));
+    set(gca, 'YTick', yticks);
+    set(gca, 'FontSize', 24);
+    set(gca, 'LineWidth', 1);  % make axis lines (incl. ticks) bold
+    set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on');
+    set(gca, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
+    xlim([Dmin, D0]);
+    ylim([-0.1,ymax+0.4]);
+
+    LW = 3;
+    J_handle = plot(exp(log_D), J, 'Color', blue, 'LineWidth', LW);
+    K_handle = plot(exp(log_D), K, 'Color', orange, 'LineWidth', LW);
+    I_handle = plot(exp(log_D), I, 'Color', green, 'LineWidth', LW);
+
+    legends = {'$J$', '$K$', '$I$'};
+    handles = [J_handle, K_handle, I_handle];
+    
+    lgd = legend(handles, legends, 'Interpreter', 'latex', 'location', 'northeast', 'Box', 'off', 'FontSize', 37);
+    lgd.Position = [0.5, 0.52, 0.1, 0.1];
+
+    xlabel('$D/D_{0}$', 'Interpreter', 'latex', 'FontSize', 25);
+    title(['$ J_{0}=', sprintf('%.15g',J0),',K_{0}=',sprintf('%.15g',K0),',I_{0}=',sprintf('%.15g',I0),'$'],'Interpreter','latex','FontSize',25);
+
+    hold off;
+end
