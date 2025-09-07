@@ -17,12 +17,12 @@ function TsoK_par (varargin)
 
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   h_vmem = 250;           % Memory (in GB) to be occupied in clusters
-  PE = 32;                % # of cores to be occupied in clusters
+  PE = 28;                % # of cores to be occupied in clusters
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   Nkeep = 3000;
   Lambda = 2.5;           % NRG discretization parameter
-  getSusc = true;        % whether to compute dynamic susceptibility or not
-  getCorr = false;        % whether to compute correlation functions or not
+  getSusc = false;        % whether to compute dynamic susceptibility or not
+  getCorr = true;        % whether to compute correlation functions or not
   nz = ones(1,num_jobs);
   J0 = zeros(1,num_jobs);
   K0 = zeros(1,num_jobs);

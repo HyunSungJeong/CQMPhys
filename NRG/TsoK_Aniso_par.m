@@ -19,8 +19,9 @@ function TsoK_Aniso_par (varargin)
   h_vmem = 250;           % Memory (in GB) to be occupied in clusters
   PE = 32;                % # of cores to be occupied in clusters
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-  Nkeep = 4000;
+  Nkeep = 6000;
   Lambda = 2.5;           % NRG discretization parameter
+  getCorr = true;
   nz = ones(1,num_jobs);
   J0 = zeros(1,num_jobs);       % spin exchange coupling
   K_perp = zeros(1,num_jobs);   % orbital pseudospin exchange coupling: perpendicular component
@@ -34,6 +35,7 @@ function TsoK_Aniso_par (varargin)
     partot(it).PE = PE;
     partot(it).Nkeep = Nkeep;
     partot(it).Lambda = Lambda;
+    partot(it).getCorr = getCorr;
 
     fprintf(['J0 for job #',sprintf('%d',it),'\n']);
     intmp = input('>>> ');

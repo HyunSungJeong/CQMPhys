@@ -58,7 +58,7 @@ function TsoK_NRG(parfn,varargin)
     [F_imp,Z_imp,E_imp,S_sp,S_orb] = setItag('L00','op',F_imp(:),Z_imp(:),E_imp,S_sp(:),S_orb(:));
     N_imp = quadOp(F_imp,F_imp,[]);
     
-    S_sp_orb = quadOp(F_imp,F_imp,[0,0,2]);
+    S_sp_orb = quadOp(F_imp,F_imp,[0,2,2]);   % there was a typo! [0,0,2] should be [0,2,2]
     S_sp_orb = S_sp_orb/2;
 
     % local isometry and Hamiltonian
@@ -71,9 +71,9 @@ function TsoK_NRG(parfn,varargin)
     H0 = H0 + 1e-40*contract(A0,'!2*',A0);
 
     % operators that define the two-point correlators
-    Ops1 = [S_sp; S_orb; S_sp_orb];% J_sp; J_orb; J_sp_orb];
+    Ops1 = [S_sp; S_orb; S_sp_orb; J_sp; J_orb; J_sp_orb];
     Ops2 = Ops1;
-    OpNames = {'ImpSp','ImpOrb','ImpSpOrb'};%,'BathSp','BathOrb','BathSpOrb'};
+    OpNames = {'ImpSp','ImpOrb','ImpSpOrb', 'BathSp','BathOrb','BathSpOrb'};%,'BathSp','BathOrb','BathSpOrb'};
 
     % zflag and cflag are options in getAdisc(fdmNRG calc. of the spectral func. of the correlation function)
     % zflag: to use(1) or not to use(0) fermionic sign change for each operator.
@@ -143,100 +143,109 @@ function TsoK_NRG(parfn,varargin)
     end
 
     %% calculate correlation functions between impurity and Wilson chain sites
-
-    Imp_sp_sq = contract(S_sp,'!2*',S_sp);        % Square of the impurity spin operator
-    Imp_orb_sq = contract(S_orb,'!2*',S_orb);     % Square of the impurity orbital psuedospin operator
-    Sp_corr = cell(N,2);        % cell array of spin-spin correlators between the impurity and Wilson chain sites
-    Orb_corr = cell(N,2);       % cell array of orb-orb correlators between the impurity and Wilson chain sites
-                                % 1: product of spin(orbital psuedospin) square / 2: inner product between spins(orbital psuedospins)
-    
-    Sp_corr_Left{1} = Imp_sp_sq;
-    Sp_corr_Left{2} = S_sp;
-    Orb_corr_Left{1} = Imp_orb_sq;
-    Orb_corr_Left{2} = S_orb;
     
     if getCorr
-      for site = (0:N-2)
+
+      Sp_corr = cell(N,1);        % cell array of spin-spin correlators between the impurity and Wilson chain sites
+      Orb_corr = cell(N,1);       % cell array of orb-orb correlators between the impurity and Wilson chain sites
+      SpOrb_corr = cell(N,1);     % cell array of spin-orb correlators between the impurity and Wilson chain sites
+      
+      Sp_corr_Left = S_sp;
+      Orb_corr_Left = S_orb;
+      SpOrb_corr_Left = S_sp_orb;
+      
+      for site = 0:N-2
+
         disptime(['Calculating correlator between impurity and Wilson chain site #',sprintf('%02d',site)]);
       
         Wilson_sp = setItag(['s',sprintf('%02d',site)],'op',J_sp);      % spin operator on Wilson chain site of interest
         Wilson_orb = setItag(['s',sprintf('%02d',site)],'op',J_orb);    % orbital psuedospin operator on Wilson chain site of interest
-        Wilson_sp_sq = contract(Wilson_sp,'!2*',Wilson_sp);             % square of the spin operator on Wilson chain site
-        Wilson_orb_sq = contract(Wilson_orb,'!2*',Wilson_orb);          % square of the orbital psuedospin operator on Wilson chain site
-          
-        if site > 0
-          Sp_corr_Left{1} = contract(Sp_corr_Left{1},'!1',nrgdata{1}.AK{site});
-          Sp_corr_Left{1} = contract(nrgdata{1}.AK{site},'!2*',Sp_corr_Left{1},'!2');
-          Orb_corr_Left{1} = contract(Orb_corr_Left{1},'!1',nrgdata{1}.AK{site});
-          Orb_corr_Left{1} = contract(nrgdata{1}.AK{site},'!2*',Orb_corr_Left{1},'!2');
+        Wilson_sporb = setItag(['s',sprintf('%02d',site)],'op',J_sp_orb);  % sp-orb operator on Wilson chain site of interest  
+
+
+        Sp_corrT = contract(Sp_corr_Left, '!1', nrgdata{1}.AT{site+1}, '!2');
+        Sp_corrT = contract(Sp_corrT, conj(Wilson_sp));
+        Sp_corrT = contract(nrgdata{1}.AT{site+1}, '!2*', Sp_corrT);
       
-          Sp_corr_Left{2} = contract(Sp_corr_Left{2},'!1',nrgdata{1}.AK{site});
-          Sp_corr_Left{2} = contract(nrgdata{1}.AK{site},'!2*',Sp_corr_Left{2},[1,3,2]);
-          Orb_corr_Left{2} = contract(Orb_corr_Left{2},'!1',nrgdata{1}.AK{site});
-          Orb_corr_Left{2} = contract(nrgdata{1}.AK{site},'!2*',Orb_corr_Left{2},[1,3,2]);
+        Sp_corrK = contract(Sp_corr_Left, '!1', nrgdata{1}.AK{site+1}, '!2');
+        Sp_corrK = contract(Sp_corrK, conj(Wilson_sp));
+        Sp_corrK = contract(nrgdata{1}.AK{site+1}, '!2*', Sp_corrK);
+      
+
+        Orb_corrT = contract(Orb_corr_Left, '!1', nrgdata{1}.AT{site+1}, '!2');
+        Orb_corrT = contract(Orb_corrT, conj(Wilson_orb));
+        Orb_corrT = contract(nrgdata{1}.AT{site+1}, '!2*', Orb_corrT);
+      
+        Orb_corrK = contract(Orb_corr_Left, '!1', nrgdata{1}.AK{site+1}, '!2');
+        Orb_corrK = contract(Orb_corrK, conj(Wilson_orb));
+        Orb_corrK = contract(nrgdata{1}.AK{site+1}, '!2*', Orb_corrK);
+
+
+        SpOrb_corrT = contract(SpOrb_corr_Left, '!1', nrgdata{1}.AT{site+1}, '!2');
+        SpOrb_corrT = contract(SpOrb_corrT, conj(Wilson_sporb));
+        SpOrb_corrT = contract(nrgdata{1}.AT{site+1}, '!2*', SpOrb_corrT);
+      
+        SpOrb_corrK = contract(SpOrb_corr_Left, '!1', nrgdata{1}.AK{site+1}, '!2');
+        SpOrb_corrK = contract(SpOrb_corrK, conj(Wilson_sporb));
+        SpOrb_corrK = contract(nrgdata{1}.AK{site+1}, '!2*', SpOrb_corrK);
+      
+
+        Sp_corr{site+1} = 0;
+        corrT = contract(Sp_corrT, diag(nrgdata{1}.RhoT{site+1}));
+        corrK = contract(Sp_corrK, nrgdata{1}.RhoK{site+1});
+
+        if ~isempty(corrT)
+          Sp_corr{site+1} = Sp_corr{site+1} + corrT.data{1};
+        end
+          
+        if ~isempty(corrK)
+          Sp_corr{site+1} = Sp_corr{site+1} + corrK.data{1};
         end
       
-        Sp_corrT{1} = contract(Sp_corr_Left{1},'!1',nrgdata{1}.AT{site+1},'!2');
-        Sp_corrT{1} = contract(Sp_corrT{1},Wilson_sp_sq);
-        Sp_corrT{1} = contract(nrgdata{1}.AT{site+1},'!2*',Sp_corrT{1});
-      
-        Sp_corrK{1} = contract(Sp_corr_Left{1},'!1',nrgdata{1}.AK{site+1},'!2');
-        Sp_corrK{1} = contract(Sp_corrK{1},Wilson_sp_sq);
-        Sp_corrK{1} = contract(nrgdata{1}.AK{site+1},'!2*',Sp_corrK{1});
-      
-      
-        Orb_corrT{1} = contract(Orb_corr_Left{1},'!1',nrgdata{1}.AT{site+1},'!2');
-        Orb_corrT{1} = contract(Orb_corrT{1},Wilson_orb_sq);
-        Orb_corrT{1} = contract(nrgdata{1}.AT{site+1},'!2*',Orb_corrT{1});
-      
-        Orb_corrK{1} = contract(Orb_corr_Left{1},'!1',nrgdata{1}.AK{site+1},'!2');
-        Orb_corrK{1} = contract(Orb_corrK{1},Wilson_orb_sq);
-        Orb_corrK{1} = contract(nrgdata{1}.AK{site+1},'!2*',Orb_corrK{1});
-      
-      
-        Sp_corrT{2} = contract(Sp_corr_Left{2},'!1',nrgdata{1}.AT{site+1},'!2');
-        Sp_corrT{2} = contract(Sp_corrT{2},conj(Wilson_sp));
-        Sp_corrT{2} = contract(nrgdata{1}.AT{site+1},'!2*',Sp_corrT{2});
-      
-        Sp_corrK{2} = contract(Sp_corr_Left{2},'!1',nrgdata{1}.AK{site+1},'!2');
-        Sp_corrK{2} = contract(Sp_corrK{2},conj(Wilson_sp));
-        Sp_corrK{2} = contract(nrgdata{1}.AK{site+1},'!2*',Sp_corrK{2});
-      
-      
-        Orb_corrT{2} = contract(Orb_corr_Left{2},'!1',nrgdata{1}.AT{site+1},'!2');
-        Orb_corrT{2} = contract(Orb_corrT{2},conj(Wilson_orb));
-        Orb_corrT{2} = contract(nrgdata{1}.AT{site+1},'!2*',Orb_corrT{2});
-      
-        Orb_corrK{2} = contract(Orb_corr_Left{2},'!1',nrgdata{1}.AK{site+1},'!2');
-        Orb_corrK{2} = contract(Orb_corrK{2},conj(Wilson_orb));
-        Orb_corrK{2} = contract(nrgdata{1}.AK{site+1},'!2*',Orb_corrK{2});
-      
-        for it = (1:2)
-          Sp_corr{site+1,it} = 0;
-          corrT = contract(Sp_corrT{it}, diag(nrgdata{1}.RhoT{site+1}));
-          corrK = contract(Sp_corrK{it}, nrgdata{1}.RhoK{site+1});
-          if ~isempty(corrT)
-            Sp_corr{site+1,it} = Sp_corr{site+1,it} + corrT.data{1};
-          end
-          if ~isempty(corrK)
-            Sp_corr{site+1,it} = Sp_corr{site+1,it} + corrK.data{1};
-          end
-      
-          Orb_corr{site+1,it} = 0;
-          corrT = contract(Orb_corrT{it}, diag(nrgdata{1}.RhoT{site+1}));
-          corrK = contract(Orb_corrK{it}, nrgdata{1}.RhoK{site+1});
-          if ~isempty(corrT)
-            Orb_corr{site+1,it} = Orb_corr{site+1,it} + corrT.data{1};
-          end
-          if ~isempty(corrK)
-            Orb_corr{site+1,it} = Orb_corr{site+1,it} + corrK.data{1};
-          end
+
+        Orb_corr{site+1} = 0;
+        corrT = contract(Orb_corrT, diag(nrgdata{1}.RhoT{site+1}));
+        corrK = contract(Orb_corrK, nrgdata{1}.RhoK{site+1});
+
+        if ~isempty(corrT)
+          Orb_corr{site+1} = Orb_corr{site+1} + corrT.data{1};
         end
 
+        if ~isempty(corrK)
+          Orb_corr{site+1} = Orb_corr{site+1} + corrK.data{1};
+        end
+
+
+        SpOrb_corr{site+1} = 0;
+        corrT = contract(SpOrb_corrT, diag(nrgdata{1}.RhoT{site+1}));
+        corrK = contract(SpOrb_corrK, nrgdata{1}.RhoK{site+1});
+
+        if ~isempty(corrT)
+          SpOrb_corr{site+1} = SpOrb_corr{site+1} + corrT.data{1};
+        end
+
+        if ~isempty(corrK)
+          SpOrb_corr{site+1} = SpOrb_corr{site+1} + corrK.data{1};
+        end
+
+        Sp_corr_Left = contract(Sp_corr_Left,'!1',nrgdata{1}.AK{site+1});
+        Sp_corr_Left = contract(nrgdata{1}.AK{site+1},'!2*',Sp_corr_Left,[1,3,2]);
+
+        Orb_corr_Left = contract(Orb_corr_Left,'!1',nrgdata{1}.AK{site+1});
+        Orb_corr_Left = contract(nrgdata{1}.AK{site+1},'!2*',Orb_corr_Left,[1,3,2]);
+            
+        SpOrb_corr_Left = contract(SpOrb_corr_Left,'!1',nrgdata{1}.AK{site+1});
+        SpOrb_corr_Left = contract(nrgdata{1}.AK{site+1},'!2*',SpOrb_corr_Left,[1,3,2]);
+        
       end
 
-      save([STG,'/spin_spin_correlators.mat'],'Sp_corr');
-      save([STG,'/orbital_orbital_correlators.mat'],'Orb_corr');
+      Sp_corr = cell2mat(Sp_corr);
+      Orb_corr = cell2mat(Orb_corr);
+      SpOrb_corr = cell2mat(SpOrb_corr);
+
+      save([STG,'/Spin_correlators.mat'],'Sp_corr');
+      save([STG,'/Orbital_correlators.mat'],'Orb_corr');
+      save([STG,'/SpOrb_correlators.mat'],'SpOrb_corr');
 
     end % if getCorr
 
@@ -259,9 +268,9 @@ function TsoK_NRG(parfn,varargin)
     save([STG,'/Temps.mat'],'Temps');
     save([STG,'/Sent_imp.mat'],'Sent_imp');
   
-    catch Err
-        disp2(getReport(Err));
-        rethrow(Err);
-    end
+  catch Err
+      disp2(getReport(Err));
+      rethrow(Err);
+  end
 
 end

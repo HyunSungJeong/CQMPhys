@@ -16,17 +16,19 @@ function Anderson_8flav_par(varargin)
     num_jobs = input('>>> ');
   
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    h_vmem = 500;           % Memory (in GB) to be occupied in clusters
-    PE = 48;                % # of cores to be occupied in clusters
+    h_vmem = 250;           % Memory (in GB) to be occupied in clusters
+    PE = 24;                % # of cores to be occupied in clusters
     syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
-    Nkeep = 3000;
-    getSE = false;           % whether to compute the self-energy or not
-    getSusc = false;        % whether to compute dynamic susceptibilities or not
+    Nkeep = 7000;
+    Lambda = 6;             % NRG discretization parameter 
+    N_SuscIter = 5;         % number of iterations to compute susceptibilities   
+    getSE = false;          % whether to compute the self-energy or not
+    getSusc = true;         % whether to compute dynamic susceptibilities or not
     nz = ones(1,num_jobs);          % number of z-shifts
     Hyb = zeros(1,num_jobs);        % Hybridization strength
     U = zeros(1,num_jobs);          % Hubbard U
     J = zeros(1,num_jobs);          % Inter-valley Hund coupling
-    mu = zeros(1,num_jobs);          % chemical potential
+    mu = zeros(1,num_jobs);         % chemical potential
     N0 = zeros(1,num_jobs);         % filling offset
     T = zeros(1,num_jobs);          % temperature
 
@@ -73,6 +75,7 @@ function Anderson_8flav_par(varargin)
         partot(it).nz = nz(it);
         partot(it).PE = PE;
         partot(it).Nkeep = Nkeep;
+        partot(it).Lambda = Lambda;
         partot(it).getSE = getSE;
         partot(it).getSusc = getSusc;
         partot(it).Hyb = Hyb;
@@ -80,6 +83,7 @@ function Anderson_8flav_par(varargin)
         partot(it).J = J;
         partot(it).N0 = N0;
         partot(it).T = T;
+        partot(it).N_SuscIter = N_SuscIter;
 
         fprintf(['Chemical potential for job #',sprintf('%d',it),'\n']);
         intmp = input('>>> ');
@@ -108,9 +112,11 @@ function Anderson_8flav_par(varargin)
         partot(it).nz = nz(it);
         partot(it).PE = PE;
         partot(it).Nkeep = Nkeep;
+        partot(it).Lambda = Lambda;
         partot(it).getSE = getSE;
         partot(it).getSusc = getSusc;
         partot(it).mu = mu(it);
+        partot(it).N_SuscIter = N_SuscIter;
     
         fprintf(['Hybridization strength for job #',sprintf('%d',it),'\n']);
         intmp = input('>>> ');
@@ -162,8 +168,8 @@ function Anderson_8flav_par(varargin)
     end   % option
   
     for it = 1:num_jobs
-      if ~exist(['/data/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)],'dir')
-        mkdir(['/data/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)]);
+      if ~exist(['/data/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)],'dir')
+        mkdir(['/data/',getenv('USER'),'/8flav/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)]);
       end
     end
 
@@ -216,16 +222,16 @@ function Anderson_8flav_par(varargin)
     end
   
     if getSE && getSusc
-      parfn = ['8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus];
+      parfn = ['8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
     elseif getSE && ~getSusc
-      parfn = ['SE_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus];
+      parfn = ['SE_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
     elseif ~getSE && getSusc
-      parfn = ['Susc_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus];
+      parfn = ['Susc_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
     else
       if option == 1
-        parfn = ['MuSweep_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus];
+        parfn = ['MuSweep_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
       else
-        parfn = ['Entropy_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus];
+        parfn = ['Entropy_8flav_par_Hyb=',Hybs,'_U=',Us,'_J=',Js,'_N0=',N0s,'_T=',Ts,'_mu=',mus,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
       end
     end
   

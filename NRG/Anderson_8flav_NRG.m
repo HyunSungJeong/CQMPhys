@@ -6,9 +6,9 @@ function Anderson_8flav_NRG(parfn,varargin)
 
         partot = job_func_preamble(parfn, varargin{:});
     
-        [PE, Nkeep, Hyb, U, J, N0, mu, T, JobName, nz, getSE, getSusc] = loadvar(partot, ...
-            {'PE', 'Nkeep', 'Hyb', 'U', 'J', 'N0', 'mu', 'T', 'JobName', 'nz', 'getSE', 'getSusc'}, ...
-                {[], [], [], [], [], [], [], [], [], [], [], []});
+        [PE, Nkeep, Lambda, Hyb, U, J, N0, mu, T, JobName, nz, getSE, getSusc, N_SuscIter] = loadvar(partot, ...
+            {'PE', 'Nkeep', 'Lambda', 'Hyb', 'U', 'J', 'N0', 'mu', 'T', 'JobName', 'nz', 'getSE', 'getSusc', 'N_SuscIter'}, ...
+                {[], [], [], [], [], [], [], [], [], [], [], [], [], []});
     
         num_threads_SL(8);
         
@@ -33,7 +33,7 @@ function Anderson_8flav_NRG(parfn,varargin)
         RhoV2in = [1;1]*Hyb;    % hybridization function
     
         % NRG parameters
-        Lambda = 4;
+        % Lambda
         N = max(ceil(-2*log(T/100)/log(Lambda))+8,20);
         Etrunc = [];
         ETRUNC = [];
@@ -50,7 +50,7 @@ function Anderson_8flav_NRG(parfn,varargin)
         %% Construct operators for individual valley degrees of freedom
         [FF, ZF, SF, IF] = getLocalSpace('FermionS','Acharge,SU2spin','NC',1);
         Fcell = {FF, ZF, SF, IF.E; FF, ZF, SF, IF.E};
-        symnum = [2,4; 1,3];
+        symnum = [2; 1];
         sym = {'A'};
         tagnames = {'v+','v-'};
 
@@ -100,28 +100,63 @@ function Anderson_8flav_NRG(parfn,varargin)
         FF(2) = contract(A, '!3*', {Fcell{1, 2}, '!1', {A, Fcell{2, 3}}}, [1 3 2]);
         FF(3) = contract(A, '!3*', {Fcell{2, 1}, '!1', A}, [1 3 2]);
         FF(4) = contract(A, '!3*', {Fcell{2, 2}, '!1', A}, [1 3 2]);
-        % FF: orb1 valley+, orb1 valley-, orb2 valley+, orb2 valley-
+        % FF: orb1(+) valley+, orb1(+) valley-, orb2(-) valley+, orb2(-) valley-
 
         for it1 = 1:size(Fcell, 1)
             for it2 = 1:2
                 SF(2*(it1-1)+it2) = contract(A, '!3*', {Fcell{it1, 3+it2}, '!1', A}, [1 3 2]);
             end
         end
-        S_o1 = SF(1) + SF(2);   % total spin operator for orbital 1
-        S_o2 = SF(3) + SF(4);   % total spin operator for orbital 2
+
+        ZF = contract(A, '!3*', {Fcell{2,3}, '!1', {Fcell{1,3}, '!1', A}});     % fermionic sign operator in the combined space of valley indices + and - and orbital indices 1 and 2
+        EF = contract(A,'!3*',A);   % identity operator in the combined space of valley indices + and - and orbital indices 1 and 2
+
+        %% Define impurity spin, orbital, and valley operators
+
+        % spin operators
+        S_o1 = SF(1) + SF(2);   % total spin operator for orbital 1(+)
+        S_o2 = SF(3) + SF(4);   % total spin operator for orbital 2(-)
         Stot = sum(SF);         % total spin
+
+        % orbital pseudospin operators
+        Orb_z(1) = contract(FF(1),'!2*',FF(1)) / 2 - contract(FF(3),'!2*',FF(3)) / 2;       % total orbital pseudospin operator for valley index +
+        Orb_z(2) = contract(FF(2),'!2*',FF(2)) / 2 - contract(FF(4),'!2*',FF(4)) / 2;       % total orbital pseudospin operator for valley index -
+        Orb_tot = Orb_z(1) + Orb_z(2);      % total orbital pseudospin operator
+
+        %Orb_plus(1) = quadOp(FF(1),FF(3),'*');      % orbital+ operator for valley index +
+        %Orb_plus(2) = quadOp(FF(2),FF(4),'*');      % orbital+ operator for valley index -
+        %Orb_plus_tot = Orb_plus(1) + Orb_plus(2);   % total orbital+ operator
+
+        % valley operators
+        V_z(1) = contract(FF(1),'!2*',FF(1)) / 2 - contract(FF(2),'!2*',FF(2)) / 2;     % total valley operator for orbital 1(+)
+        V_z(2) = contract(FF(3),'!2*',FF(3)) / 2 - contract(FF(4),'!2*',FF(4)) / 2;     % total valley operator for orbital 2(-)
+        Vtot_z = V_z(1) + V_z(2);   % total valley operator
+
+        FF_quad = QSpace(1,2);
+        Qnums = [-1,-1,0,0,0,0;
+                 0,0,-1,-1,0,0];
+        for it = 1:2
+            FF_quad(it) = contract(setItag(FF(2*it-1),'s00','op1'), '!1', setItag(FF(2*it),'s00','op2'));
+            A = getIdentity(FF_quad(it), 2, FF_quad(it), 4, 'op');
+            FF_quad(it) = contract(FF_quad(it), '!1', A, '!3') / sqrt(2);
+            FF_quad(it) = getsub(FF_quad(it), find(ismember(FF_quad(it).Q{3}, Qnums(it,:), 'rows')));
+        end
+
+        Lambda_p = 4*quadOp(FF_quad(1), FF_quad(2), '*');
+        Lambda_p = getsub(Lambda_p, find(ismember(Lambda_p.Q{2}, [-1,-1,0,0,0,0], 'rows')));
+
+        Lambda_z = 2*quadOp(FF_quad(1), FF_quad(1), '*') - 2*quadOp(FF_quad(2), FF_quad(2), '*');
+        Lambda_z = getsub(Lambda_z, find(ismember(Lambda_z.Q{2}, Qnums, 'rows')));
 
         for it1 = 1:numel(FF)
             NF(it1) = quadOp(FF(it1), FF(it1), []);
         end
         Ntot = sum(NF);             % total charge operator
-        ZF = contract(A, '!3*', {Fcell{2,3}, '!1', {Fcell{1,3}, '!1', A}});
-        EF = contract(A,'!3*',A);   % identity operator in the combined space of valley indices + and - and orbital indices 1 and 2
 
         % interacting term in the impurity Hamiltonian
         HU = (U/2)*(Ntot - N0*EF)*(Ntot - N0*EF);
         HU = HU + (J/2)*(contract(S_o1,'!2*',S_o1) - contract(SF(1),'!2*',SF(1)) - contract(SF(2),'!2*',SF(2)));
-        HU = HU + (J/2)*(contract(S_o2,'!2*',S_o2) - contract(SF(1),'!2*',SF(3)) - contract(SF(2),'!2*',SF(4)));
+        HU = HU + (J/2)*(contract(S_o2,'!2*',S_o2) - contract(SF(3),'!2*',SF(3)) - contract(SF(4),'!2*',SF(4)));
         HU = HU - (J/4)*(NF(1)*NF(2) + NF(3)*NF(4));
 
         % quadratic term in the impurity Hamiltonian
@@ -141,15 +176,20 @@ function Anderson_8flav_NRG(parfn,varargin)
         A0 = getIdentity(setItag('L00',getvac(EF)),2,EF,2,'K00*',[1 3 2]);
         HU = contract(A0,'!2*',{HU,'!1',A0});           % HU in the K00 space
         Hmu = contract(A0,'!2*',{Hmu,'!1',A0});         % Hmu in the K00 space
-        H0 = HU + Hmu;                                  % impurity Hamiltonian
+        H0 = HU + Hmu + 1e-40*getIdentity(A0,2);        % impurity Hamiltonian
 
-        STG = ['/data/',getenv('USER'),'/8flav/',JobName,'_Nkeep=',sprintf('%.15g',Nkeep)];
+        STG = ['/data/',getenv('USER'),'/8flav/',JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
 
-        nrgdata = cell(1,nz);
-
-        %% NRG & susceptibility calculations
+        %% Define frequency grid
 
         ocont = getAcont(0, 0, 0, 0, 'emin', emin, 'emax', emax, 'estep', estep); 
+        docon = zeros(numel(ocont), 1);
+        docon(1) = 0.5 * (ocont(2) - ocont(1));
+        docon(2:end - 1) = 0.5 * (ocont(3:end) - ocont(1:end - 2));
+        docon(end) = 0.5 * (ocont(end) - ocont(end - 1));
+
+        %% Define variables and paths for storing calculation results
+
         SE_H = zeros(numel(FF), nz);    % Hartree self-energy
         nu = zeros(numel(FF), 1);      % Filling of each orbital
         Adiscs = cell(36,nz);
@@ -159,23 +199,104 @@ function Anderson_8flav_NRG(parfn,varargin)
         Acont3 = Acont1;
         save([STG,'/ocont.mat'],'ocont');
 
-        for itz = 1:nz
-            nrgdata{itz} = NRG_SL([],H0,A0,Lambda,ff{itz},FF,ZF,gg{itz},NF,'Nkeep',Nkeep, ...
-                                        'Etrunc',Etrunc,'ETRUNC',ETRUNC,'dff',dff{itz},'dgg',dgg{itz},'deps',1e-10);
-            nrgdata{itz} = getRhoFDM(nrgdata{itz},T,'-v','Rdiag',true);         % calculating the full density matrix(FDM)
+        nrgdata = cell(1,nz);
 
-            if itz == 1
-                for it1 = 1:numel(FF)
-                    nu(it1) = getEpVal(nrgdata{1}, NF(it1));
-                end
-                save([STG,'/nu.mat'],'nu');
-                
-                [Etot,Qtot,Qdiff] = plotE(nrgdata{1},'Emax',10,'legmax',25);       % Data for Eflow diagram    
-                save([STG,'/Etot.mat'],'Etot');
-                save([STG,'/Qtot.mat'],'Qtot');
+        node_name = getenv('HOSTNAME');
+        disp2(node_name);
+
+        TempAvail = cell(1,26);
+        for itN = 1:14
+            TempAvail{itN} = ['b',sprintf('%02d',itN)];
+        end
+
+        for itN = 1:12
+            TempAvail{itN+14} = ['a',sprintf('%02d',itN+18)];
+        end
+
+        if ismember(node_name,TempAvail)    % memory of compuational node enough to run this NRG calculation
+
+            NRGdataSTG = '/tmp/hyunsung/NRG';
+            STG_avail = true;
+            if ~exist(NRGdataSTG,'dir')
+                mkdir(NRGdataSTG);
             end
+        else
 
-            if getSE    %% Compute self-energy
+            STG_avail = false;
+            for itN = 1:6
+                tmp = load(['/project/hyunsung/NRG',sprintf('%d',itN),'/Avail.mat']);
+                Avail = tmp.Avail;
+
+                if Avail
+                    NRGdataSTG = ['/project/hyunsung/NRG',sprintf('%d',itN)];
+                    Avail = false;
+                    STG_avail = true;
+                    save([NRGdataSTG,'/Avail.mat'], 'Avail');
+                    break;
+                end
+            end
+        end
+
+        if STG_avail
+            disp2(['NRGdata storage directory : ''', NRGdataSTG,'''']);
+        else
+            error('ERR: There is no available NRGdata storage directory!');
+        end
+
+        %% NRG calculation
+        for itz = 1:nz
+
+            nrgdata{itz} = [NRGdataSTG,'/NRGdata_nz=',sprintf('%d',itz)];
+            NRG_SL(nrgdata{itz},H0,A0,Lambda,ff{itz},FF,ZF,gg{itz},NF,'Nkeep',Nkeep, ...
+                                        'Etrunc',Etrunc,'ETRUNC',ETRUNC,'dff',dff{itz},'dgg',dgg{itz},'deps',1e-10);
+            getRhoFDM(nrgdata{itz},T,'-v','Rdiag',true);         % calculating the full density matrix(FDM)
+        end
+
+        for it1 = 1:numel(FF)
+            nu(it1) = getEpVal(nrgdata{1}, NF(it1));
+        end
+        save([STG,'/nu.mat'],'nu');
+                
+        [Etot,Qtot,Qdiff] = plotE(nrgdata{1},'Emax',10,'legmax',25);       % Data for Eflow diagram    
+        save([STG,'/Etot.mat'],'Etot');
+        save([STG,'/Qtot.mat'],'Qtot');
+
+        %% calculate impurity contribution to entropy
+
+        BathEnt_path = ['/data/hyunsung/8flav/BathEnt_Nkeep=', sprintf('%d',Nkeep), '_Lambda=', sprintf('%.15g',Lambda), ...
+                                '_Hyb=', sprintf('%.15g',Hyb), '_T=1e-12/BathEntData.mat'];
+
+        BathEntData = load(BathEnt_path);   BathEntData = BathEntData.BathEntData;
+        
+        beta = 0.5:0.1:2;
+        EntData.beta = beta;
+        EntData.Temps = cell(1,numel(beta));
+        EntData.S_imp = cell(1,numel(beta));
+
+
+        for itN = 1:numel(beta)
+            [Temps,~,~,Sent,~,~,~] = getTDconv(nrgdata{1},'useT','beta',beta(itN));
+            Sent = Sent(Temps > T);
+            Temps = Temps(Temps > T);
+
+            idx = find(BathEntData.beta == beta(itN));
+            Sent_bath = BathEntData.S_bath{idx};
+            Temps_bath = BathEntData.Temps{idx};
+            Sent_bath = Sent_bath(Temps_bath > T);
+
+            Sent_imp = Sent - Sent_bath;
+            
+            EntData.Temps{itN} = Temps;
+            EntData.S_imp{itN} = Sent_imp;
+        end
+
+        save([STG,'/EntData.mat'],'EntData');
+
+        %% Compute self-energy
+
+        if getSE    %% Compute self-energy
+
+            for itz = 1:nz   
                 % % Two-point correlators
                 % Hartree self-energy
                 QFz = QSpace(1, numel(FF)); % QFz = [FF,HU], to be used for the improved estimators of the self-energy
@@ -207,11 +328,7 @@ function Anderson_8flav_NRG(parfn,varargin)
 
                 [odisc,Adiscs(:,itz),sigmak] = getAdisc(nrgdata{itz}, Ops1, Ops2, ZF, 'zflag', zflag, 'cflag', cflag, ...
                                                             'emin', emin, 'emax', emax, 'estep', 2*estep);
-            end
-
-        end % itz
-
-        if getSE 
+            end % itz
 
             for ita = (1:size(Adiscs,1))
                 [ocont,Aconts{ita}] = getAcont(odisc, mean(cell2mat(reshape(Adiscs(ita,:),[1 1 nz])),3), sigmak, T/5, 'alphaz', 1/nz, ...
@@ -244,60 +361,78 @@ function Anderson_8flav_NRG(parfn,varargin)
             save([STG,'/SE.mat'],'SE');
             save([STG,'/Aimp.mat'],'Aimp');
             save([STG,'/ImSEle.mat'],'ImSEle');
-        end
+
+        end % if getSE
+
+
+        %% Compute dynamic susceptibilities
 
         if getSusc      %% Compute dynamic susceptibilities
 
-            SuscOps1 = [SF(:); NF(:)];
-            SuscOps2 = SuscOps1;
-            OpNames = {'ImpSp1p', 'ImpSp1m', 'ImpSp2p', 'ImpSp2m', 'Charge1p', 'Charge1m', 'Charge2p', 'Charge2m'};
-            zflag = zeros(1,numel(SuscOps1));
-            cflag = (zflag-0.5)*2;
+            SuscOps_all = [Lambda_p; Lambda_z; SF(:); NF(:); Orb_z(:); V_z(:)];
+            OpNames_all = {'Lambda_p', 'Lambda_z', 'ImpSp1p', 'ImpSp1m', 'ImpSp2p', 'ImpSp2m', 'Charge1p', 'Charge1m', 'Charge2p', 'Charge2m', 'Orbz_vp', 'Orbz_vm', 'Vz_o1', 'Vz_o2'};
 
-            Adiscs_Susc = cell(numel(SuscOps1),nz); % discrete data
-            Aconts_Susc = cell(1,size(Adiscs_Susc,1)); % continuous (i.e., broadened) spectral function
-            
-            for itz = (1:nz)
-                [odisc,Adiscs_Susc,sigmak] = getAdisc(nrgdata{itz}, SuscOps1, SuscOps2, ZF, 'zflag', zflag, 'cflag', cflag, ...
-                                                    'emin', emin, 'emax', emax, 'estep', 2*estep);
-            end
-            
-            % file path to save Aconts
-            SaveAconts = cellfun(@(x) [STG,'/NRG_Op=',OpNames{x},'.mat'], num2cell(1:numel(SuscOps1)), 'UniformOutput', false);
-            SaveAdiscs = cellfun(@(x) [STG,'/Adiscs_NRG_Op=',OpNames{x},'_nz=',sprintf('%d',nz),'.mat'], num2cell(1:numel(SuscOps1)), 'UniformOutput', false);
-            
-            % Calculate dynamic susceptibilities
-            for ita = (1:size(Adiscs_Susc,1))
+            N_calc = floor(numel(SuscOps_all)/N_SuscIter);
+            N_rem = rem(numel(SuscOps_all), N_SuscIter);
 
-                Adisc_Susc = mean(cell2mat(reshape(Adiscs_Susc(ita,:),[1 1 nz])),3);
-                [ocont, Aconts_Susc{ita}] = getAcont(odisc, Adisc_Susc, sigmak,T/5, 'alphaz', 1/nz, ...
-                                                        'emin', emin, 'emax', emax, 'estep', estep);
+            N_calc_cnt = 0;
 
-                temp = Aconts_Susc{ita};
-                save(SaveAconts{ita},'temp');
-            end
+            for itN = 1:N_SuscIter
+
+                clear Adiscs_Susc
+                clear Aconts_Susc
+
+                if itN <= N_rem
+                    SuscOps1 = SuscOps_all(N_calc_cnt+1 : N_calc_cnt+N_calc+1);
+                    OpNames = OpNames_all(N_calc_cnt+1 : N_calc_cnt+N_calc+1);
+                    N_calc_cnt = N_calc_cnt + N_calc + 1;
+                else
+                    SuscOps1 = SuscOps_all(N_calc_cnt+1 : N_calc_cnt+N_calc);
+                    OpNames = OpNames_all(N_calc_cnt+1 : N_calc_cnt+N_calc);
+                    N_calc_cnt = N_calc_cnt + N_calc;
+                end
+                
+                SuscOps2 = SuscOps1;
+
+                zflag = zeros(1,numel(SuscOps1));
+                cflag = (zflag-0.5)*2;
+
+                Adiscs_Susc = cell(numel(SuscOps1),nz); % discrete data
+                Aconts_Susc = cell(1,size(Adiscs_Susc,1)); % continuous (i.e., broadened) spectral function
+                
+                for itz = (1:nz)
+                    [odisc,Adiscs_Susc(:,itz),sigmak] = getAdisc(nrgdata{itz}, SuscOps1, SuscOps2, ZF, 'zflag', zflag, 'cflag', cflag, ...
+                                                        'emin', emin, 'emax', emax, 'estep', 2*estep);
+                end
+                
+                % file path to save Aconts
+                SaveAconts = cellfun(@(x) [STG,'/NRG_Op=',OpNames{x},'.mat'], num2cell(1:numel(SuscOps1)), 'UniformOutput', false);
+                SaveAdiscs = cellfun(@(x) [STG,'/Adiscs_NRG_Op=',OpNames{x},'_nz=',sprintf('%d',nz),'.mat'], num2cell(1:numel(SuscOps1)), 'UniformOutput', false);
+                
+                % Calculate dynamic susceptibilities
+                for ita = (1:size(Adiscs_Susc,1))
+
+                    Adisc_Susc = mean(cell2mat(reshape(Adiscs_Susc(ita,:),[1 1 nz])),3);
+                    [ocont, Aconts_Susc{ita}] = getAcont(odisc, Adisc_Susc, sigmak,T/5, 'alphaz', 1/nz, ...
+                                                            'emin', emin, 'emax', emax, 'estep', estep);
+
+                    temp = Aconts_Susc{ita};
+                    save(SaveAconts{ita},'temp');
+                end
+
+            end % itN
         end % getSusc
-        
 
-        %% calculate impurity contribution to entropy
-        [ff, gg] = doZLD(ozin, RhoV2in, Lambda, N+10, 1, 'Nfit', Nfit);
-
-        A02 = getIdentity(setItag('L00',getvac(EF)), 2, EF, 2, 'K00*', [1 3 2]);
-        H02 = contract(A02,'!2*',A02) + 1e-40*getIdentity(A02,2);
-        bathNRG_data = NRG_SL([], H02, A02, Lambda, ff{1}, FF, ZF, 'Nkeep', Nkeep, 'deps',1e-10);
-        
-        beta = 1.7;
-        [Temps,~,~,Sent_bath,~,~,~] = getTDconv(bathNRG_data,'useT','beta',beta);
-        [~,~,~,Sent,~,~,~] = getTDconv(nrgdata{1},'useT','beta',beta);
-        Sent = Sent(Temps > T);
-        Sent_bath = Sent_bath(Temps > T);
-        Sent_imp = Sent - Sent_bath;
-        Temps = Temps(Temps > T);
-        save([STG,'/Temps.mat'],'Temps');
-        save([STG,'/Sent_imp.mat'],'Sent_imp');
-
+        if ~ismember(node_name,TempAvail)
+            Avail = true;
+            save([NRGdataSTG,'/Avail.mat'], 'Avail');
+        end
 
     catch Err
+        if ~ismember(node_name,TempAvail) && STG_avail
+            Avail = true;
+            save([NRGdataSTG,'/Avail.mat'], 'Avail');
+        end
         disp2(getReport(Err));
         rethrow(Err);
     end
