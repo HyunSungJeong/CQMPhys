@@ -5,9 +5,9 @@ function TsoK_NRG(parfn,varargin)
 
     partot = job_func_preamble(parfn, varargin{:});
 
-    [PE, Nkeep, Lambda, J0, K0, I0, T, JobName, getSusc, getCorr, nz] = loadvar(partot, ...
-      {'PE', 'Nkeep', 'Lambda', 'J0', 'K0', 'I0', 'T', 'JobName', 'getSusc', 'getCorr', 'nz'}, ...
-        {[], [], [], [], [], [], [], [], [], [], []});
+    [PE, Nkeep, Lambda, J0, K0, I0, T, JobName, getSusc, getCorr, nz, Delta] = loadvar(partot, ...
+      {'PE', 'Nkeep', 'Lambda', 'J0', 'K0', 'I0', 'T', 'JobName', 'getSusc', 'getCorr', 'nz', 'Delta'}, ...
+        {[], [], [], [], [], [], [], [], [], [], [], []});
 
     %num_threads_SL(8);
     
@@ -27,9 +27,8 @@ function TsoK_NRG(parfn,varargin)
     % T : Temperature
     emin = T;
     D = 1;
-    Delta = pi;
     ozin = [-1;1]*D;
-    RhoV2in = [1;1]*(Delta/pi);
+    RhoV2in = [1;1]*Delta;
 
     % NRG parameters
     N = max(ceil(-2*log(T/100)/log(Lambda))+8,20);
@@ -61,6 +60,8 @@ function TsoK_NRG(parfn,varargin)
     S_sp_orb = quadOp(F_imp,F_imp,[0,2,2]);   % there was a typo! [0,0,2] should be [0,2,2]
     S_sp_orb = S_sp_orb/2;
 
+    SpOrb_sq_iso = contract(S_sp_orb,'!1',S_sp_orb,'!1*');
+
     % local isometry and Hamiltonian
     A0 = getIdentity(E_imp,2,Es,2,'K00*',[1,3,2]);
 
@@ -83,7 +84,7 @@ function TsoK_NRG(parfn,varargin)
     % corresponds to the purple sign factor in lecture note 16.2 of tensor networks course
     cflag = (zflag-0.5)*2;
 
-    STG = ['/data/',getenv('USER'),'/TsoK/',JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
+    STG = ['/data/',getenv('USER'),'/TsoK/',JobName,'_Delta=',sprintf('%.15g',Delta),'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
     %STG = ['/data/',getenv('USER'),'/TsoK/TEST_Nk=3000_',JobName];
 
     Adiscs = cell(numel(Ops1),nz); % discrete data
@@ -101,7 +102,7 @@ function TsoK_NRG(parfn,varargin)
         save([STG,'/Qtot.mat'],'Qtot');
       end
 
-      nrgdata{itz} = getRhoFDM(nrgdata{itz},T,'-v','Rdiag',true);   % calculating the full density matrix(FDM)
+      nrgdata{itz} = getRhoFDM(nrgdata{itz},T,'-v','Rdiag',false);   % calculating the full density matrix(FDM)
 
       if getSusc
         [odisc,Adiscs(:,itz),sigmak] = getAdisc(nrgdata{itz},Ops1,Ops2,ZF,'Z_L00',Z_imp,'zflag',zflag,'cflag',cflag,'emin',emin);
@@ -257,16 +258,30 @@ function TsoK_NRG(parfn,varargin)
     H02 = contract(A02,'!2*',A02) + 1e-40*getIdentity(A02,2);
     bathNRG_data = NRG_SL([],H02,A02,Lambda,ff{1}(2:end),FF,ZF,'Nkeep',Nkeep,'deps',1e-10);
         
-    beta = 1.5;
-    [Temps,~,~,Sent_bath,~,~,~] = getTDconv(bathNRG_data,'useT','beta',beta);
-    [~,~,~,Sent,~,~,~] = getTDconv(nrgdata{1},'useT','beta',beta);
+    %beta = 1.5;
+    beta = 0.5:0.1:2;
+    EntData.beta = beta;
+    EntData.Temps = cell(1,numel(beta));
+    EntData.S_imp = cell(1,numel(beta));
+    
+    for itN = 1:numel(beta)
 
-    Sent = Sent(Temps > T);
-    Sent_bath = Sent_bath(Temps > T);
-    Sent_imp = Sent - Sent_bath;
-    Temps = Temps(Temps > T);
-    save([STG,'/Temps.mat'],'Temps');
-    save([STG,'/Sent_imp.mat'],'Sent_imp');
+      [Temps,~,~,Sent_bath,~,~,~] = getTDconv(bathNRG_data,'useT','beta',beta(itN));
+      [~,~,~,Sent,~,~,~] = getTDconv(nrgdata{1},'useT','beta',beta(itN));
+
+      Sent = Sent(Temps > T);
+      Sent_bath = Sent_bath(Temps > T);
+      Sent_imp = Sent - Sent_bath;
+      Temps = Temps(Temps > T);
+
+      EntData.Temps{itN} = Temps;
+      EntData.S_imp{itN} = Sent_imp;
+    end
+    
+    save([STG,'/EntData.mat'],'EntData');
+    
+    Fixed = true;
+    save([STG,'/Fixed.mat'],'Fixed');
   
   catch Err
       disp2(getReport(Err));

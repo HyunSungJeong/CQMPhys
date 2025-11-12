@@ -17,25 +17,28 @@ function TsoK_Aniso_par (varargin)
 
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   h_vmem = 250;           % Memory (in GB) to be occupied in clusters
-  PE = 32;                % # of cores to be occupied in clusters
+  PE = 24;                % # of cores to be occupied in clusters
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   Nkeep = 6000;
   Lambda = 2.5;           % NRG discretization parameter
-  getCorr = true;
+  getCorr = false;
+  isHDD = false;          % whether to use HDD storage for NRG data
   nz = ones(1,num_jobs);
   J0 = zeros(1,num_jobs);       % spin exchange coupling
   K_perp = zeros(1,num_jobs);   % orbital pseudospin exchange coupling: perpendicular component
   K_z = zeros(1,num_jobs);      % orbital pseudospin exchange coupling: z-component
-  I0 = zeros(1,num_jobs);       % spin-orbital exchange coupling
+  I_perp = zeros(1,num_jobs);   % spin-orbital exchange coupling : perpendicular component
+  I_z = zeros(1,num_jobs);      % spin-orbital exchange coupling : z-component
   T = zeros(1,num_jobs);      % temperature
 
-  for it = (1:num_jobs)
+  for it = 1:num_jobs
 
     partot(it).nz = nz(it);
     partot(it).PE = PE;
     partot(it).Nkeep = Nkeep;
     partot(it).Lambda = Lambda;
     partot(it).getCorr = getCorr;
+    partot(it).isHDD = isHDD;
 
     fprintf(['J0 for job #',sprintf('%d',it),'\n']);
     intmp = input('>>> ');
@@ -52,10 +55,15 @@ function TsoK_Aniso_par (varargin)
     partot(it).K_z = intmp;
     K_z(it) = intmp;
 
-    fprintf(['I0 for job #',sprintf('%d',it),'\n']);
+    fprintf(['I_perp for job #',sprintf('%d',it),'\n']);
     intmp = input('>>> ');
-    partot(it).I0 = intmp;
-    I0(it) = intmp;
+    partot(it).I_perp = intmp;
+    I_perp(it) = intmp;
+
+    fprintf(['I_z for job #',sprintf('%d',it),'\n']);
+    intmp = input('>>> ');
+    partot(it).I_z = intmp;
+    I_z(it) = intmp;
 
     ValidIdx = false;
     while ~ValidIdx
@@ -76,8 +84,9 @@ function TsoK_Aniso_par (varargin)
     JobName = ['J0=',sprintf('%.15g',partot(it).J0), ...
               '_K_perp=',sprintf('%.15g',partot(it).K_perp), ...
                 '_K_z=',sprintf('%.15g',partot(it).K_z), ...
-                  '_I0=',sprintf('%.15g',partot(it).I0), ...
-                    '_T=',sprintf('%.15g',partot(it).T)];     
+                  '_I_perp=',sprintf('%.15g',partot(it).I_perp), ...
+                    '_I_z=',sprintf('%.15g',partot(it).I_z), ...
+                      '_T=',sprintf('%.15g',partot(it).T)];     
 
     partot(it).JobName = JobName;
 
@@ -120,12 +129,20 @@ function TsoK_Aniso_par (varargin)
     K_zs = ['[',K_zs(1:end-1),']'];
   end
 
-  if all(I0 == I0(end)) && num_jobs ~= 1
-    I0s = ['[',sprintf('%.15g',I0(end)),']x',sprintf('%d',num_jobs)];
+  if all(I_perp == I_perp(end)) && num_jobs ~= 1
+    I_perps = ['[',sprintf('%.15g',I_perp(end)),']x',sprintf('%d',num_jobs)];
   else
-    I0s = cellfun(@(x) [sprintf('%.15g',partot(x).I0),','],num2cell(1:num_jobs),'UniformOutput',false);
-    I0s = cell2mat(I0s);
-    I0s = ['[',I0s(1:end-1),']'];
+    I_perps = cellfun(@(x) [sprintf('%.15g',partot(x).I_perp),','],num2cell(1:num_jobs),'UniformOutput',false);
+    I_perps = cell2mat(I_perps);
+    I_perps = ['[',I_perps(1:end-1),']'];
+  end
+
+  if all(I_z == I_z(end)) && num_jobs ~= 1
+    I_zs = ['[',sprintf('%.15g',I_z(end)),']x',sprintf('%d',num_jobs)];
+  else
+    I_zs = cellfun(@(x) [sprintf('%.15g',partot(x).I_z),','],num2cell(1:num_jobs),'UniformOutput',false);
+    I_zs = cell2mat(I_zs);
+    I_zs = ['[',I_zs(1:end-1),']'];
   end
 
   if all(T == T(end)) && num_jobs ~= 1
@@ -136,7 +153,7 @@ function TsoK_Aniso_par (varargin)
     Ts = ['[',Ts(1:end-1),']'];
   end
 
-  parfn = ['TsoK_Aniso_par_J0=',J0s,'_K_perp=',K_perps,'_K_z=',K_zs,'_I0=',I0s,'_T=',Ts,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
+  parfn = ['TsoK_Aniso_par_J0=',J0s,'_K_perp=',K_perps,'_K_z=',K_zs,'_I_perp=',I_perps,'_I_z=',I_zs,'_T=',Ts,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
 
   dispstruct(partot);
   parfn = [go('mu/Para/'), parfn, '.mat'];

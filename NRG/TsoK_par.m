@@ -17,11 +17,12 @@ function TsoK_par (varargin)
 
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   h_vmem = 250;           % Memory (in GB) to be occupied in clusters
-  PE = 28;                % # of cores to be occupied in clusters
+  PE = 8;                % # of cores to be occupied in clusters
   syms = cell(1, 0);      % non-Abelian symmetry types to be exploited
   Nkeep = 3000;
   Lambda = 2.5;           % NRG discretization parameter
-  getSusc = false;        % whether to compute dynamic susceptibility or not
+  Delta = 1;              % hybridization strength
+  getSusc = true;         % whether to compute dynamic susceptibility or not
   getCorr = true;        % whether to compute correlation functions or not
   nz = ones(1,num_jobs);
   J0 = zeros(1,num_jobs);
@@ -37,6 +38,7 @@ function TsoK_par (varargin)
     partot(it).getSusc = getSusc;
     partot(it).getCorr = getCorr;
     partot(it).Lambda = Lambda;
+    partot(it).Delta = Delta;
 
     fprintf(['J0 for job #',sprintf('%d',it),'\n']);
     intmp = input('>>> ');
@@ -77,6 +79,7 @@ function TsoK_par (varargin)
 
   end
 
+  %{}
   for it = (1:num_jobs)
     if ~exist(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)],'dir')
 
@@ -85,10 +88,11 @@ function TsoK_par (varargin)
         movefile(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep)], ...
                   ['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)]);
       else
-        mkdir(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)]);
+        mkdir(['/data/',getenv('USER'),'/TsoK/',partot(it).JobName,'_Delta=',sprintf('%.15g',Delta),'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)]);
       end
     end
   end
+  %}
 
   if all(J0 == J0(end))
     J0s = ['[',sprintf('%.15g',J0(end)),']x',sprintf('%d',num_jobs)];
@@ -122,7 +126,7 @@ function TsoK_par (varargin)
     Ts = ['[',Ts(1:end-1),']'];
   end
 
-  parfn = ['TsoK_par_J0=',J0s,'_K0=',K0s,'_I0=',I0s,'_T=',Ts,'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
+  parfn = ['TsoK_par_J0=',J0s,'_K0=',K0s,'_I0=',I0s,'_T=',Ts,'_Delta=',sprintf('%.15g',Delta),'_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
 
   dispstruct(partot);
   parfn = [go('mu/Para/'), parfn, '.mat'];

@@ -249,7 +249,7 @@ function Anderson_8flav_NRG(parfn,varargin)
             nrgdata{itz} = [NRGdataSTG,'/NRGdata_nz=',sprintf('%d',itz)];
             NRG_SL(nrgdata{itz},H0,A0,Lambda,ff{itz},FF,ZF,gg{itz},NF,'Nkeep',Nkeep, ...
                                         'Etrunc',Etrunc,'ETRUNC',ETRUNC,'dff',dff{itz},'dgg',dgg{itz},'deps',1e-10);
-            getRhoFDM(nrgdata{itz},T,'-v','Rdiag',true);         % calculating the full density matrix(FDM)
+            getRhoFDM(nrgdata{itz},T,'-v','Rdiag',false);         % calculating the full density matrix(FDM)
         end
 
         for it1 = 1:numel(FF)
