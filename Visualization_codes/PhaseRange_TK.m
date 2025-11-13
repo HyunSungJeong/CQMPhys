@@ -36,7 +36,7 @@ function [K, Phase_range, Phase_name, varargout] = PhaseRange_TK(J0,I0,varargin)
     % K : [numeric vector ] row vector containing the spin-spin coupling
     %           constants I0 for given (J0, I0)
     %
-    % Phase_range : [cell array of numeric arrays] temperature ranges of phases for each I.
+    % Phase_range : [cell array of numeric arrays] temperature ranges of phases for each I(?? K?).
     %                   1 x numel(I) cell array. Each cell element is an array with two columns.
     %                   Each row represents the minmum and maximum value of temperature 
     %                   in which a phase is well-defined

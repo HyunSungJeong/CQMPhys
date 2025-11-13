@@ -238,7 +238,7 @@ function PhaseDiag_TI_final(J0, K0, varargin)
     %}
 
     % redefine x-tick labels using annotation()
-    tickLabelFont = 15;
+    tickLabelFont = 18;
     ax.XTickLabel = [];
     xticks = 10.^(-2:-2:-8);
     

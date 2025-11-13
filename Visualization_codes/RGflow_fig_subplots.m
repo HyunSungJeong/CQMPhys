@@ -37,19 +37,21 @@ I_0 = 0.01*ones(1,15);
 PM_RGflow_finiteI(J_0, K_0, I_0)
 
 % subplot labels
+%{}
 annotation(figureHandle, 'textbox', [0.06, 0.975, 0, 0], ...
-    'String', '$\mathrm{(a)}$', 'Interpreter', 'latex', 'FontSize', 15, ...
+    'String', '$\mathrm{(a)}$', 'Interpreter', 'latex', 'FontSize', 18, ...
     'FitBoxToText', 'on', ...
     'HorizontalAlignment', 'center', ...
     'VerticalAlignment', 'top', ...
     'LineStyle', 'none');
 
 annotation(figureHandle, 'textbox', [0.06, 0.515, 0, 0], ...
-    'String', '$\mathrm{(b)}$', 'Interpreter', 'latex', 'FontSize', 15, ...
+    'String', '$\mathrm{(b)}$', 'Interpreter', 'latex', 'FontSize', 18, ...
     'FitBoxToText', 'on', ...
     'HorizontalAlignment', 'center', ...
     'VerticalAlignment', 'top', ...
     'LineStyle', 'none');
+%}
 
 fig = gcf;
 
@@ -61,7 +63,7 @@ set(fig, 'PaperSize', fig_pos(3:4));
 
 % Specify full path
 output_path = 'C:\Users\hsjun\OneDrive\Physics\Research\TsoK_publication\Figures\Poorman_RG_JK_subplots.pdf';
-set(fig, 'Renderer', 'painters')
+set(fig, 'Renderer', 'painters');
 print(fig, output_path, '-dpdf');
 
 %% Function to plot RG flow for I0 == 0
@@ -75,8 +77,8 @@ function PM_RGflow_zeroI(J0, K0, I0)
     Jmin = -0.5;
     Jmax = 1.05;
 
-    subplot2 = subplot(2, 1, 1);
-    set(subplot2, 'Position', [0.15, 0.51, 0.75, 0.44]);
+    subplot1 = subplot(2, 1, 1); 
+    set(subplot1, 'Position', [0.15, 0.51, 0.75, 0.44]); % [left bottom width height]
     hold on;
     set(gca, 'Layer', 'top');
 
@@ -91,7 +93,7 @@ function PM_RGflow_zeroI(J0, K0, I0)
     set(ax, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
 
     %xlabel('$K_{0}$', 'Interpreter', 'latex', 'FontSize', 24);
-    ylabel('$J_{0}$', 'Interpreter', 'latex', 'FontSize', 24);
+    ylabel('$J_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
 
     hx = get(ax, 'XLabel');
     hy = get(ax, 'YLabel');
@@ -107,17 +109,6 @@ function PM_RGflow_zeroI(J0, K0, I0)
     ax.XTickLabel = [];
     xticks = [-0.4, -0.2, 0, 0.3, 0.6, 1];
     ax.XTick = xticks;
-    
-    %{
-    for itx = 1:numel(xticks)
-        text(xticks(itx), Jmin - 0.005, ...
-        sprintf('$%.15g$', xticks(itx)), ...
-        'Interpreter', 'latex', ...
-        'HorizontalAlignment', 'center', ...
-        'VerticalAlignment', 'top', ...
-        'FontSize', tickLabelFont);
-    end
-    %}
 
     % redefine y-tick labels using annotation()
     ax.YTickLabel = [];
@@ -138,85 +129,15 @@ function PM_RGflow_zeroI(J0, K0, I0)
 
     %% Plot phase patches
 
-    %{}
     % define custom colors
     patch_blue = [.910, .906, .969];
     patch_purple = [.937, .910, .973];
     patch_orange = [.984, .957, .910];
     patch_rose = [0.957, 0.835, 0.875];
     patch_gray = 0.85 * [1, 1, 1];
-
-    %{
-    line_blue = [.188, .137, .761];
-    line_purple = [.455, .165, .765];
-    line_orange = [.902, .612, .247];
-    line_rose = [0.945, 0.643, 0.733];
-    line_gray = 0.5 * [1, 1, 1];
-
-    blue = line_blue;
-    purple = line_purple;
-    orange = line_orange;
-    rose = line_rose;
-    gray = line_gray;
-
-    % define custom colormaps
-    % purple colormap
-    r = linspace(1, purple(1), 256)';
-    g = linspace(1, purple(2), 256)';
-    b = linspace(1, purple(3), 256)';
-    purple_cmap = [r, g, b];
-
-    % rose colormap
-    r = linspace(1, rose(1), 256)';
-    g = linspace(1, rose(2), 256)';
-    b = linspace(1, rose(3), 256)';
-    rose_cmap = [r, g, b];
-
-    % orange colormap
-    r = linspace(1, orange(1), 256)';
-    g = linspace(1, orange(2), 256)';
-    b = linspace(1, orange(3), 256)';
-    orange_cmap = [r, g, b];
-
-    % gray colormap
-    r = linspace(1, gray(1), 256)';
-    g = linspace(1, gray(2), 256)';
-    b = linspace(1, gray(3), 256)';
-    gray_cmap = [r, g, b];
-
-    % define phase color landscapes
-    Nsteps = 256;
-    C_FO = ones(Nsteps+1, Nsteps+1);
-    C_SO = C_FO;    C_OO = C_FO;    C_FI = C_FO;
-
-    for it1 = 0:Nsteps
-        for it2 = 0:Nsteps
-
-            K_FO = Kmax*it2/Nsteps;         J_FO = Jmax-Jmax*it1/Nsteps;
-            K_SO = Kmin-Kmin*it2/Nsteps;    J_SO = Jmax-Jmax*it1/Nsteps;
-            K_OO = Kmax*it2/Nsteps;         J_OO = Jmin*it1/Nsteps;
-            K_FI = Kmin-Kmin*it2/Nsteps;    J_FI = Jmin*it1/Nsteps;
-
-            C = 3;
-            C_FO(it1+1, it2+1) = exp(- C*norm([K_FO-1, J_FO-1]));
-            C_SO(it1+1, it2+1) = 1+exp(-C*norm([K_SO, J_SO-1]));
-            C_OO(it1+1, it2+1) = 2+exp(-C*norm([K_OO-1, J_OO]));
-            C_FI(it1+1, it2+1) = 3+exp(-C*norm([K_FI, J_FI]));
-        end
-    end
-
-    imagesc([0,Kmax], [Jmax,0], C_FO);
-    imagesc([Kmin,0], [Jmax,0], C_SO);
-    imagesc([0,Kmax], [0,Jmin], C_OO);
-    imagesc([Kmin,0], [0,Jmin], C_FI);
-    
-    Cmap_tot = cat(1, purple_cmap, rose_cmap, orange_cmap, gray_cmap);
-    colormap(Cmap_tot);
-    %}
     
 
     % plot phase patches
-    %{}
     X_FO = [0, Kmax, Kmax, 0];  Y_FO = [0, 0, Jmax, Jmax];
     X_SO = [Kmin, 0, 0, Kmin];  Y_SO = [0, 0, Jmax, Jmax];
     X_OO = [0, Kmax, Kmax, 0];  Y_OO = [0, 0, Jmin, Jmin];
@@ -224,12 +145,9 @@ function PM_RGflow_zeroI(J0, K0, I0)
 
     FaceAlpha = 1;
     patch(X_FO, Y_FO, patch_purple, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
-    patch(X_SO, Y_SO, patch_rose, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
-    patch(X_OO, Y_OO, patch_orange, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
+    patch(X_SO, Y_SO, patch_orange, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
+    patch(X_OO, Y_OO, patch_rose, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
     patch(X_FI, Y_FI, patch_gray, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
-    %}
-
-    %}
 
     %% Calculate and plot RG flows from poor man's scaling results
     cmap = turbo(Nflow);
@@ -332,8 +250,8 @@ function PM_RGflow_finiteI(J0, K0, I0)
     set(ax, 'XMinorTick', 'off', 'YMinorTick', 'off');
     set(ax, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
 
-    xlabel('$K_{0}$', 'Interpreter', 'latex', 'FontSize', 24);
-    ylabel('$J_{0}$', 'Interpreter', 'latex', 'FontSize', 24);
+    xlabel('$K_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
+    ylabel('$J_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
 
     hx = get(ax, 'XLabel');
     hy = get(ax, 'YLabel');
@@ -387,86 +305,13 @@ function PM_RGflow_finiteI(J0, K0, I0)
     patch_gray = 0.85 * [1, 1, 1];
     patch_green = [.925, .973, .910];
 
-    %{
-    line_blue = [.188, .137, .761];
-    line_purple = [.455, .165, .765];
-    line_orange = [.902, .612, .247];
-    line_rose = [0.945, 0.643, 0.733];
-    line_gray = 0.5 * [1, 1, 1];
-
-    blue = line_blue;
-    purple = line_purple;
-    orange = line_orange;
-    rose = line_rose;
-    gray = line_gray;
-
-    % define custom colormaps
-    % purple colormap
-    r = linspace(1, purple(1), 256)';
-    g = linspace(1, purple(2), 256)';
-    b = linspace(1, purple(3), 256)';
-    purple_cmap = [r, g, b];
-
-    % rose colormap
-    r = linspace(1, rose(1), 256)';
-    g = linspace(1, rose(2), 256)';
-    b = linspace(1, rose(3), 256)';
-    rose_cmap = [r, g, b];
-
-    % orange colormap
-    r = linspace(1, orange(1), 256)';
-    g = linspace(1, orange(2), 256)';
-    b = linspace(1, orange(3), 256)';
-    orange_cmap = [r, g, b];
-
-    % gray colormap
-    r = linspace(1, gray(1), 256)';
-    g = linspace(1, gray(2), 256)';
-    b = linspace(1, gray(3), 256)';
-    gray_cmap = [r, g, b];
-
-    % define phase color landscapes
-    Nsteps = 256;
-    C_FO = ones(Nsteps+1, Nsteps+1);
-    C_SO = C_FO;    C_OO = C_FO;    C_FI = C_FO;
-
-    for it1 = 0:Nsteps
-        for it2 = 0:Nsteps
-
-            K_FO = Kmax*it2/Nsteps;         J_FO = Jmax-Jmax*it1/Nsteps;
-            K_SO = Kmin-Kmin*it2/Nsteps;    J_SO = Jmax-Jmax*it1/Nsteps;
-            K_OO = Kmax*it2/Nsteps;         J_OO = Jmin*it1/Nsteps;
-            K_FI = Kmin-Kmin*it2/Nsteps;    J_FI = Jmin*it1/Nsteps;
-
-            C = 3;
-            C_FO(it1+1, it2+1) = exp(- C*norm([K_FO-1, J_FO-1]));
-            C_SO(it1+1, it2+1) = 1+exp(-C*norm([K_SO, J_SO-1]));
-            C_OO(it1+1, it2+1) = 2+exp(-C*norm([K_OO-1, J_OO]));
-            C_FI(it1+1, it2+1) = 3+exp(-C*norm([K_FI, J_FI]));
-        end
-    end
-
-    imagesc([0,Kmax], [Jmax,0], C_FO);
-    imagesc([Kmin,0], [Jmax,0], C_SO);
-    imagesc([0,Kmax], [0,Jmin], C_OO);
-    imagesc([Kmin,0], [0,Jmin], C_FI);
-    
-    Cmap_tot = cat(1, purple_cmap, rose_cmap, orange_cmap, gray_cmap);
-    colormap(Cmap_tot);
-    %}
-    
-
     % plot phase patches
-    %{}
     X_FL = [Kmin, Kmax, Kmax, Kmin];   Y_FL = [Jmin, Jmin, Jmax, Jmax];
     X_FI = [Kmin, 0, 0, Kmin];  Y_FI = [0, 0, Jmin, Jmin];
 
     FaceAlpha = 1;
     patch(X_FL, Y_FL, patch_green, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
     patch(X_FI, Y_FI, patch_gray, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
-    %}
-
-    %}
 
     %% Calculate and plot RG flows from poor man's scaling results
     cmap = turbo(Nflow);
@@ -517,6 +362,146 @@ function PM_RGflow_finiteI(J0, K0, I0)
     'LineWidth', 2);
 
     annotation('textbox', [0.89, 0.43, 0.1, 0.1], 'String', '$\mathbf{c}_{\mathrm{FL}}^{*}$', 'Interpreter', 'latex', ...
+                        'HorizontalAlignment', 'center', 'FitBoxToText', 'on', 'Units', 'normalized', 'LineStyle', 'none', 'FontSize', 24);
+
+end
+
+%% Function to plot RG flow on K0-I0 section
+
+function PM_RGflow_KI(J0, K0, I0)
+
+    Nflow = numel(J0);
+
+    Kmin = -0.5;
+    Kmax = 1.05;
+    Imin = 0;
+    Imax = 1.05;
+
+    subplot1 = subplot(2, 1, 1);
+    set(subplot1, 'Position', [0.15, 0.51, 0.75, 0.44]);
+    hold on;
+    set(gca, 'Layer', 'top');
+
+    % define plot positions
+    ax = gca;
+    pos = ax.Position;  % [left bottom width height]
+    pos(2) = pos(2) + 0.02;
+    ax.Position = pos;
+
+    set(ax, 'XScale', 'linear', 'YScale', 'linear');
+
+    set(ax, 'LineWidth', 1);  % make axis lines (incl. ticks) bold
+    set(ax, 'XMinorTick', 'off', 'YMinorTick', 'off');
+    set(ax, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
+
+    xlabel('$I_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
+    ylabel('$K_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
+
+    hx = get(ax, 'XLabel');
+    hy = get(ax, 'YLabel');
+    hx.Units = 'normalized';
+    hy.Units = 'normalized';
+
+    % Modify x- and y-label positions manually
+    hx.Position = hx.Position + [0, -0.005, 0];
+    hy.Position = hy.Position + [-0.02, 0, 0];
+
+    xlim([Imin, Imax]);
+    ylim([Kmin, Kmax]);
+
+    %% Plot phase patches
+
+    % define custom colors
+    patch_blue = [.910, .906, .969];
+    patch_purple = [.937, .910, .973];
+    patch_orange = [.984, .957, .910];
+    patch_rose = [0.957, 0.835, 0.875];
+    patch_gray = 0.85 * [1, 1, 1];
+    
+
+    % plot phase patches
+    %X_FO = [0, Kmax, Kmax, 0];  Y_FO = [0, 0, Jmax, Jmax];
+    %X_SO = [Kmin, 0, 0, Kmin];  Y_SO = [0, 0, Jmax, Jmax];
+    %X_OO = [0, Kmax, Kmax, 0];  Y_OO = [0, 0, Jmin, Jmin];
+    %X_FI = [Kmin, 0, 0, Kmin];  Y_FI = [0, 0, Jmin, Jmin];
+
+    FaceAlpha = 1;
+    %patch(X_FO, Y_FO, patch_purple, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
+    %patch(X_SO, Y_SO, patch_rose, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
+    %patch(X_OO, Y_OO, patch_orange, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
+    %patch(X_FI, Y_FI, patch_gray, 'EdgeColor', 'none', 'FaceAlpha', FaceAlpha);
+
+    %% Calculate and plot RG flows from poor man's scaling results
+    cmap = turbo(Nflow);
+
+    for itN = 1:Nflow
+        [J,K,I,log_D] = RG_PoorMan(J0(itN), K0(itN), I0(itN), 'order', 3);
+
+        Nsteps = 75;
+        Steps = round(linspace(10, numel(log_D)-1, Nsteps));
+
+        for itS = 1:Nsteps
+            NumD = Steps(itS);
+            dI = I(NumD+1) - I(NumD-1);
+            dK = K(NumD+1) - K(NumD-1);
+            dS = sqrt(dI^2 + dK^2);
+
+            %height = 0.1 / abs(log(dS));
+            height = min(0.1, 45*dS);
+            angle = atan(dK/dI) - pi/2;
+
+            [X, Y] = getArrow(I(NumD), K(NumD), 0.045, 0.045, 0.015, height, angle);
+
+            patch(X, Y, cmap(itN,:), 'EdgeColor', 'none', 'FaceAlpha', 1);
+            %patch(X, Y, 'black', 'EdgeColor', 'none', 'FaceAlpha', 1);
+        end
+        
+    end
+
+    %% Mark RG fixed points
+
+    FI = [0, 0];
+
+    plot(FI(1), FI(2), 's', ...
+    'MarkerSize', 12, ...
+    'MarkerEdgeColor', 'black', ...
+    'MarkerFaceColor', 'none', ...
+    'LineWidth', 2);
+
+    annotation('textbox', [0.39, 0.62, 0.1, 0.1], 'String', '$\mathbf{c}_{\mathrm{FI}}^{*}$', 'Interpreter', 'latex', ...
+                        'HorizontalAlignment', 'center', 'FitBoxToText', 'on', 'Units', 'normalized', 'LineStyle', 'none', 'FontSize', 24);
+
+    SO = [0, 1];
+
+    plot(SO(1), SO(2), 'X', ...
+    'MarkerSize', 15, ...
+    'MarkerEdgeColor', 'black', ...
+    'MarkerFaceColor', 'none', ...
+    'LineWidth', 2);
+
+    annotation('textbox', [0.39, 0.91, 0.1, 0.1], 'String', '$\mathbf{c}_{\mathrm{SO}}^{*}$', 'Interpreter', 'latex', ...
+                        'HorizontalAlignment', 'center', 'FitBoxToText', 'on', 'Units', 'normalized', 'LineStyle', 'none', 'FontSize', 24);
+
+    J_OO = [1, 0];
+
+    plot(J_OO(1), J_OO(2), '^', ...
+    'MarkerSize', 12, ...
+    'MarkerEdgeColor', 'black', ...
+    'MarkerFaceColor', 'none', ...
+    'LineWidth', 2);
+
+    annotation('textbox', [0.77, 0.62, 0.1, 0.1], 'String', '$\mathbf{c}_{\mathrm{OO}}^{*}$', 'Interpreter', 'latex', ...
+                        'HorizontalAlignment', 'center', 'FitBoxToText', 'on', 'Units', 'normalized', 'LineStyle', 'none', 'FontSize', 24);
+
+    FO = [1, 1];
+
+    plot(FO(1), FO(2), 'o', ...
+    'MarkerSize', 12, ...
+    'MarkerEdgeColor', 'black', ...
+    'MarkerFaceColor', 'none', ...
+    'LineWidth', 2);
+
+    annotation('textbox', [0.88, 0.9, 0.1, 0.1], 'String', '$\mathbf{c}_{\mathrm{FO}}^{*}$', 'Interpreter', 'latex', ...
                         'HorizontalAlignment', 'center', 'FitBoxToText', 'on', 'Units', 'normalized', 'LineStyle', 'none', 'FontSize', 24);
 
 end

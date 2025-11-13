@@ -30,8 +30,8 @@ function TsoK_Aniso_selected_data()
         origFiles = dir(fullfile(origFolderPath, '*'));
         origFiles = origFiles(~[origFiles.isdir]);  % exclude subfolders
     
-        if ~ismember('Temps.mat', {origFiles.name})
-            disp(origFolderPath);
+        if ~ismember('Sent_imp_beta=2.mat', {origFiles.name})
+            disp(origFolderPath(58:end));
         end
 
         if isempty({origFiles.name})

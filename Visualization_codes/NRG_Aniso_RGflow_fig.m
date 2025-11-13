@@ -15,9 +15,17 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
                 SubFig_idx = varargin{2};
                 varargin(1:2) = [];
 
+            case 'alphaz'
+                alphaz = varargin{2};
+                varargin(1:2) = [];
+
             otherwise
         end % switch - case
     end % while
+
+    if isscalar(alphaz)
+        alphaz = alphaz*[1,1];
+    end
 
     QnumKeys = [
         0, -1, 1;
@@ -59,11 +67,11 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
 
     %% Load Data
     Niter = 120;
-    Nkeep = 4000;
+    Nkeep = 6000;
     Lambda = 2.5;
     TsoK_path = 'C:\Users\hsjun\OneDrive\Physics\Research\data\TsoK_Aniso_selected';
     Data_path = ['J0=', sprintf('%.15g',J0), '_K_perp=', sprintf('%.15g',K_perp), '_K_z=', sprintf('%.15g',K_z), ...
-                   '_I0=', sprintf('%.15g', I0),'_T=1e-24_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
+                   '_I0=', sprintf('%.15g', I0),'_T=1e-30_Nkeep=',sprintf('%.15g',Nkeep),'_Lambda=',sprintf('%.15g',Lambda)];
 
     Full_path = [TsoK_path, filesep, Data_path];
     FileInfo = dir(Full_path);
@@ -103,7 +111,7 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
         
             Adisc = mean(cell2mat(reshape(Adiscs(ita,:),[1 1 nz])),3);
             
-            [ocont, Acont] = getAcont(odisc,Adisc,sigmak,T/5,'alphaz',0.6,'emin',emin,'tol',1e-19);
+            [ocont, Acont] = getAcont(odisc,Adisc,sigmak,T/5,'alphaz',alphaz(2),'emin',emin,'tol',1e-19);
             
             if ita <=3
                 ImpSusc{ita} = Acont;
@@ -329,13 +337,14 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
     
     % plot impurity dynamic susceptibilities
     hdl_sp = plot(ocont, ImpSusc{1}, 'Color', [.466, .674, .188], 'LineWidth', 2);
-    hdl_orb = plot(ocont, ImpSusc{2}, 'Color', [.850, .325, .098], 'LineWidth', 2);
-    hdl_sporb = plot(ocont, ImpSusc{3}, 'Color', [0, .447, .741], 'LineWidth', 2);
+    hdl_orb_plus = plot(ocont, ImpSusc{2}, 'Color', [.850, .325, .098], 'LineWidth', 2);
+    hdl_orb_z = plot(ocont, ImpSusc{3}, 'Color', [0, .447, .741], 'LineWidth', 2);
 
     TempFontSize = 16;
     FS = 18;
 
     % linear fit and show power laws
+    %{}
     for itS = 1:3
         FitRange = FitInfo.Imp{itS}.Range;
         LineShift = FitInfo.Imp{itS}.LineShift;
@@ -369,7 +378,7 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
             if itS < 3
                 CritExp = sprintf('%d',CritExp);
             else
-                CritExp = sprintf('%.2f',CritExp);
+                CritExp = sprintf('%.1f',CritExp);
             end
 
             Yfit = power(10, Yfit) * LShift;
@@ -382,6 +391,7 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
 
         end % itN
     end % itS
+    %}
 
     hold off;
 
@@ -514,7 +524,7 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
             if itS < 3
                 CritExp = sprintf('%d',CritExp);
             else
-                CritExp = sprintf('%.2f',CritExp);
+                CritExp = sprintf('%.1f',CritExp);
             end
 
             Yfit = power(10, Yfit) * LShift;
@@ -537,9 +547,11 @@ function NRG_Aniso_RGflow_fig(J0, K_perp, K_z, I0, FitInfo, varargin)
     set(fig, 'PaperSize', fig_pos(3:4));
     
     % Specify full path
+    %{
     output_path = 'C:\Users\hsjun\OneDrive\Physics\Research\TsoK_publication\Figures';
     output_path = [output_path, '\Eflow_Susc_J0=', sprintf('%.15g',J0), '_K0=', sprintf('%.15g',K0), '.svg'];
     print(fig, output_path, '-dsvg');
+    %}
 
     hold off;
 

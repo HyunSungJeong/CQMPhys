@@ -469,7 +469,7 @@ function [axes, varargout] = SLplot(X, Y, varargin)
             YtickInterval = 5*ceil((YmaxTick-YminTick)/25);
         end
 
-        % Function handles for linear <--> symlog transformation of x-coordinates
+        % Function handles for linear <--> symlog transformation of y-coordinates
         lin2sym_Y = @(y_lin) (heaviside(log(abs(y_lin)+1e-50)/log(10)-YminExp+1e-10).*sign(y_lin).*(Yzerowidth + (1-Yzerowidth-0.05)*(log(abs(y_lin)+1e-50)/log(10) - floor(YminExp))/(ceil(YmaxExp) - floor(YminExp))));
 
         sym2lin_Y = @(y_sl) ((sign(y_sl).*power(10, (abs(y_sl)-Yzerowidth)*(ceil(YmaxExp) - floor(YminExp))/(1-Yzerowidth-0.05) + floor(YminExp)) ) );

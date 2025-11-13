@@ -40,14 +40,20 @@ function sci = SciNot(Num,varargin)
         end % switch - case
     end
 
-    Expon = floor(log10(abs(Num)));
-    Coeff = round(Num/power(10,Expon), NumSig, 'significant');
+    if Num == 0
+        sci = '0';
 
-    if Coeff == 1
-        sci = ['10^{',sprintf('%.15g',Expon),'}'];
-    elseif Coeff == -1
-        sci = ['-10^{',sprintf('%.15g',Expon),'}'];
     else
-        sci = [sprintf('%.15g',Coeff),' \times 10^{',sprintf('%.15g',Expon),'}'];
+        Expon = floor(log10(abs(Num)));
+        Coeff = round(Num/power(10,Expon), NumSig, 'significant');
+    
+        if Coeff == 1
+            sci = ['10^{',sprintf('%.15g',Expon),'}'];
+        elseif Coeff == -1
+            sci = ['-10^{',sprintf('%.15g',Expon),'}'];
+        else
+            sci = [sprintf('%.15g',Coeff),' \times 10^{',sprintf('%.15g',Expon),'}'];
+        end
+        
     end
 end

@@ -7,6 +7,7 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
     I = I0;
     log_D = log(D0)/log(10);
     order = 2;
+    Rho = 1;
     dispD = false;
     
     while ~isempty(varargin)
@@ -19,6 +20,14 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
                     error('ERR: order of perturbation must be a interger greater than 1');
                 end
 
+            case 'Rho'
+                if isnumeric(varargin{2})
+                    Rho = varargin{2};
+                    varargin(1:2) = [];
+                else
+                    error('ERR: ''Hyb'' must be a positive real number');
+                end
+
             case '-v'
                 dispD = true;
                 varargin(1) = [];
@@ -28,7 +37,7 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
         end
     end
 
-    function D = Der(var,J,K,I,order)
+    function D = Der(var,J,K,I,Rho,order)
         switch order
             case 2
                 switch var
@@ -49,6 +58,8 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
                         D = - ((2*J + 2*K - J*J - K*K)*I - (1/8)*I*I*I);
                 end
         end
+
+        D = Rho*D;
     end
 
     cnt = 1;
@@ -59,30 +70,30 @@ function [J_out,K_out,I_out,log_D_out] = RG_PoorMan(J0,K0,I0,varargin)
 
     while(log_D > log(1e-24))
         der = zeros(4,3);
-        der(1,1) = Der('J',J,K,I,order);
-        der(1,2) = Der('K',J,K,I,order);
-        der(1,3) = Der('I',J,K,I,order);
+        der(1,1) = Der('J',J,K,I,Rho,order);
+        der(1,2) = Der('K',J,K,I,Rho,order);
+        der(1,3) = Der('I',J,K,I,Rho,order);
     
         J_temp = J + (h/2)*der(1,1);
         K_temp = K + (h/2)*der(1,2);
         I_temp = I + (h/2)*der(1,3);
-        der(2,1) = Der('J',J_temp,K_temp,I_temp,order);
-        der(2,2) = Der('K',J_temp,K_temp,I_temp,order);
-        der(2,3) = Der('I',J_temp,K_temp,I_temp,order);
+        der(2,1) = Der('J',J_temp,K_temp,I_temp,Rho,order);
+        der(2,2) = Der('K',J_temp,K_temp,I_temp,Rho,order);
+        der(2,3) = Der('I',J_temp,K_temp,I_temp,Rho,order);
     
         J_temp = J + (h/2)*der(2,1);
         K_temp = K + (h/2)*der(2,2);
         I_temp = I + (h/2)*der(2,3);
-        der(3,1) = Der('J',J_temp,K_temp,I_temp,order);
-        der(3,2) = Der('K',J_temp,K_temp,I_temp,order);
-        der(3,3) = Der('I',J_temp,K_temp,I_temp,order);
+        der(3,1) = Der('J',J_temp,K_temp,I_temp,Rho,order);
+        der(3,2) = Der('K',J_temp,K_temp,I_temp,Rho,order);
+        der(3,3) = Der('I',J_temp,K_temp,I_temp,Rho,order);
     
         J_temp = J + h*der(3,1);
         K_temp = K + h*der(3,2);
         I_temp = I + h*der(3,3);
-        der(4,1) = Der('J',J_temp,K_temp,I_temp,order);
-        der(4,2) = Der('K',J_temp,K_temp,I_temp,order);
-        der(4,3) = Der('I',J_temp,K_temp,I_temp,order);
+        der(4,1) = Der('J',J_temp,K_temp,I_temp,Rho,order);
+        der(4,2) = Der('K',J_temp,K_temp,I_temp,Rho,order);
+        der(4,3) = Der('I',J_temp,K_temp,I_temp,Rho,order);
     
         weights = [1, 2, 2, 1];
         J = J + (h/6)*weights*der(:,1);

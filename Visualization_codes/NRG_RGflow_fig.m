@@ -231,7 +231,7 @@ function NRG_RGflow_fig(J0, K0, I0, FitInfo, varargin)
 
     %% Plot figure
 
-    figureHandle = figure('Position', [100, -20, 550, 1100]);    % Width = 550 px, Height = 1100 px
+    figureHandle = figure('Position', [100, -50, 550, 1100]);    % Width = 550 px, Height = 1100 px
     hold on;
 
     % subplot labels
@@ -323,10 +323,6 @@ function NRG_RGflow_fig(J0, K0, I0, FitInfo, varargin)
 
         if ismember(Qnum_plot(it,1:3), QnumKeys, 'rows')
             key = find(ismember(QnumKeys, Qnum_plot(it,1:3), 'rows'));
-            if key == 5 || key == 6
-                disp(key);
-                disp(Qnum_plot(it,1:3));
-            end
 
             Color = ColorDict(key,:);
             linestyle = LinestyleDict{key};
@@ -388,7 +384,7 @@ function NRG_RGflow_fig(J0, K0, I0, FitInfo, varargin)
     hy.Units = 'normalized';
 
     % Modify y-label position manually
-    hy.Position = hy.Position + [0.05, 0, 0];
+    hy.Position = hy.Position + [0.06, 0, 0];
 
     % redefine y-tick labels using annotation()
     ax2.YTickLabel = [];
@@ -489,7 +485,7 @@ function NRG_RGflow_fig(J0, K0, I0, FitInfo, varargin)
     
     % Modify x- and y-label positions manually
     hx.Position = hx.Position + [0, 0.25, 0];
-    hy.Position = hy.Position + [0.07, 0, 0];
+    hy.Position = hy.Position + [0.06, 0, 0];
 
     % redefine x-tick labels using annotation()
     tickLabelFont = 18;

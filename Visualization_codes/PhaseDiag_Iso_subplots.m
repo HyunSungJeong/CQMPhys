@@ -1,5 +1,5 @@
 
-figure('Position', [50, 10, 550, 900]);
+figureHandle = figure('Position', [50, 10, 550, 900]);
 
 %% Subplot 1: Temperature-K0 phase diagram with J0 = 0.3, I0 = 0;
 
@@ -100,7 +100,7 @@ pos1 = [0.15, 0.58, 0.8, 0.42]; % [left bottom width height]
 set(subplot1, 'Position', pos1); 
 set(gca, 'Layer', 'top');
 ax = gca; 
-set(ax, 'Position', pos1);
+
 set(ax, 'XScale', 'linear', 'YScale', 'log', 'FontSize', 18);
 set(ax, 'XTick', -0.4:0.1:0.3);
 set(ax, 'YTick', 10.^(log10(Tmin):3:log10(Tmax)));
@@ -112,7 +112,7 @@ ax.TickLength = [0.015, 0.002];      % ticksize : [major, minor]
 
 % define x- and y-labels
 xlabel('$K_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
-ylabel('$\mathrm{Temperature / energy \ scale}$', 'Interpreter', 'latex', 'FontSize', 20);
+ylabel('$\mathrm{temperature / energy \ scale}$', 'Interpreter', 'latex', 'FontSize', 20);
 
 hx = get(ax, 'XLabel');
 hy = get(ax, 'YLabel');
@@ -121,7 +121,7 @@ hy.Units = 'normalized';
 
 % Modify x- and y-label positions manually
 hx.Position = hx.Position + [0, 0, 0];
-hy.Position = hy.Position + [-0.09, 0, 0];
+hy.Position = hy.Position + [-0.09, -0.03, 0];
 
 % redefine x-tick labels using annotation()
 tickLabelFont = 15;
@@ -214,10 +214,10 @@ text(text_X, text_Y, FO_text, 'Color', line_purple, 'Interpreter', 'latex', 'Fon
 FS = 18;
 
 % fully overscreened
-text_X = 0.16;
+text_X = 0.14;
 text_Y = 1e-14;
 text(text_X, text_Y, '$\mathrm{Fully}$', 'Interpreter', 'latex', 'Color', line_purple, 'FontName', 'Calibri', 'FontSize', FS);
-text_X = 0.1;
+text_X = 0.08;
 text_Y = 1e-15;
 text(text_X, text_Y, '$\mathrm{Overscreened}$', 'Interpreter', 'latex', 'Color', line_purple, 'FontName', 'Calibri', 'FontSize', FS);
     
@@ -311,7 +311,7 @@ end
 
 
 
-%% Subplot 2: Temperature-I0 phase diagram with J0 = 0.3, K0 = 0.2;
+%% Subplot 2: Temperature-I0 phase diagram with J0 = 0.3, K0 = 0.16;
 
 J0 = 0.16;
 K0 = 0.3;
@@ -456,7 +456,7 @@ for itD = 1:numel(I0)
 
                 case 'Fermi Liquid'
                     if T_FL_2(itD) < Thres
-                        T_FL_2(itD) = power(10, Phase_range_inflec{itD}(itP,2) );
+                        %T_FL_2(itD) = power(10, Phase_range_inflec{itD}(itP,2) );
                     end
 
                 case 'Fully Overscreened'
@@ -491,7 +491,7 @@ ax.TickLength = [0.015, 0.002];      % ticksize : [major, minor]
 set(gca, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
 
 xlabel('$I_{0}$', 'Interpreter', 'latex', 'FontSize', 20);
-ylabel('$\mathrm{Temperature / energy \ scale}$', 'Interpreter', 'latex', 'FontSize', 20);
+ylabel('$\mathrm{temperature / energy \ scale}$', 'Interpreter', 'latex', 'FontSize', 20);
 
 hx = get(ax, 'XLabel');
 hy = get(ax, 'YLabel');
@@ -500,7 +500,7 @@ hy.Units = 'normalized';
 
 % Modify x- and y-label positions manually
 hx.Position = hx.Position + [0, -0.04, 0];
-hy.Position = hy.Position + [-0.09, 0, 0];
+hy.Position = hy.Position + [-0.09, -0.03, 0];
 
 % redefine x-tick labels using annotation()
 tickLabelFont = 15;
@@ -542,9 +542,10 @@ idx3 = find(~isnan(T_OO_1), 1, 'last');
 X = log10(I0(idx2+1:idx3));
 Y = log10(T_OO_1(idx2+1:idx3));
 f = polyfit(X, Y, 1);
+
 I0_FO_extrap = ( log10(FO_Tmax) - f(2) ) / f(1);
 I0_FO_extrap = power(10, I0_FO_extrap);
-
+ 
 % extrapolate FO - OO phase boundary (extrapolate inflection point)
 NFL_bound_mean = mean(log10(NFL_bound));
 I0_NFL_bound_extrap = ( NFL_bound_mean - f(2) ) / f(1);
@@ -598,80 +599,6 @@ FO_patch = patch(FO_x, FO_y, patch_purple, 'EdgeColor', 'none');
 OO_patch = patch(OO_x, OO_y, patch_orange, 'EdgeColor', 'none');
 FL_patch = patch(FL_x, FL_y, patch_green, 'EdgeColor', 'none');
 F_patch = patch(F_x, F_y, patch_gray, 'EdgeColor', 'none');
-
-%}
-%%
-
-
-%{
-
-% Anchors and corresponding colors
-anchors = [0, 2, 2*sqrt(2), 4];
-anchor_colors = [patch_green;
-                 patch_purple;
-                 patch_orange;
-                 patch_gray];
-
-% Number of colormap levels
-N = 256;
-query = linspace(min(anchors), max(anchors), N)';
-
-% Transition sharpness parameter
-k = 10;
-
-% Preallocate colormap
-cmap = zeros(N,3);
-
-for j = 1:N
-    x = query(j);
-
-    % If below first anchor
-    if x <= anchors(1)
-        cmap(j,:) = anchor_colors(1,:);
-
-    % If above last anchor
-    elseif x >= anchors(end)
-        cmap(j,:) = anchor_colors(end,:);
-
-    else
-        % Find which interval x is in
-        idx = find(x >= anchors,1,'last');
-        if idx == length(anchors)
-            idx = idx-1;
-        end
-
-        x0 = anchors(idx);
-        x1 = anchors(idx+1);
-        c0 = anchor_colors(idx,:);
-        c1 = anchor_colors(idx+1,:);
-
-        % Logistic weight between colors
-        t = (x - x0) / (x1 - x0);
-        w = 1 ./ (1 + exp(-k*(t-0.5)));  % abrupt but continuous
-        cmap(j,:) = (1-w).*c0 + w.*c1;
-    end
-end
-
-colormap(cmap);
-
-for it = 1:numel(I0)
-    Sent{it} = Sent{it}(Temps >= Tmin & Temps <= Tmax);
-end
-Temps = Temps(Temps > Tmin & Temps <= Tmax);
-
-nx = numel(I0);
-ny = numel(Temps);
-x = logspace(log10(I0min), log10(I0max), nx);
-y = logspace(log10(Tmin), log10(Tmax), ny);
-
-Z = zeros(ny,nx);
-for it = 1:nx
-    Z(:,it) = exp(Sent{it}(end:-1:1));
-end
-
-imagesc(x,y,Z);
-colorbar;
-%}
 
 % define extrapolated parts of phase boundaries
 I0_UO_ext_bound = [I0min, I0(idx5), I0(idx7), I0_FL_extrap, I0max];
@@ -810,6 +737,23 @@ text(textX, textY, ['$|I_{0}|^{',sprintf('%d',round(f(1))),'}$'], 'Color', line_
 set(gca, 'Layer', 'top');
 xlim([I0min, I0max]);
 ylim([Tmin, Tmax]);
+
+% subplot labels
+annotation(figureHandle, 'textbox', [0.035, 1, 0, 0], ...
+    'String', '$\mathrm{(a)}$', 'Interpreter', 'latex', 'FontSize', 18, ...
+    'FitBoxToText', 'on', ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'top', ...
+    'LineStyle', 'none');
+
+annotation(figureHandle, 'textbox', [0.035, 0.5, 0, 0], ...
+    'String', '$\mathrm{(b)}$', 'Interpreter', 'latex', 'FontSize', 18, ...
+    'FitBoxToText', 'on', ...
+    'HorizontalAlignment', 'center', ...
+    'VerticalAlignment', 'top', ...
+    'LineStyle', 'none');
+
+% save as pdf
 
 fig = gcf;
 

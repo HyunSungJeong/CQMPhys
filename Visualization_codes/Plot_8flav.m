@@ -1,10 +1,10 @@
 clear;
 Hyb = 1;
 U = 5;
-J = 3.2;
+J = 0;
 N0 = 2;
 T = 1e-8;
-mu = -0.5;
+mu = 0;
 Nkeep = 7000;
 Lambda = 6;
 dataFolder = ['Hyb=',sprintf('%.15g',Hyb),'_U=',sprintf('%.15g',U),'_J=',sprintf('%.15g',J),'_N0=',sprintf('%.15g',N0), ...
@@ -13,8 +13,8 @@ dataFolder = ['Hyb=',sprintf('%.15g',Hyb),'_U=',sprintf('%.15g',U),'_J=',sprintf
 STG_path = ['C:\Users\hsjun\OneDrive\Physics\Research\data\8flav\',dataFolder];
 
 plotEflow = true;
-plotSusc = false;
-plotEnt = true;
+plotSusc = true;
+plotEnt = false;
 
 if plotEflow
     Etot = load([STG_path,'\Etot.mat']);
@@ -31,6 +31,7 @@ if plotSusc
     ocont = load([STG_path,'\ocont.mat']);
     ocont = ocont.ocont;
     
+    %{
     Charge_susc = cell(1,4);
     tmp = load([STG_path,'\NRG_Op=Charge1m.mat']);
     Charge_susc{1} = tmp.temp;
@@ -40,36 +41,55 @@ if plotSusc
     Charge_susc{3} = tmp.temp;
     tmp = load([STG_path,'\NRG_Op=Charge2p.mat']);
     Charge_susc{4} = tmp.temp;
+    %}
     
-    Sp_susc = cell(1,4);
-    tmp = load([STG_path,'\NRG_Op=ImpSp1m.mat']);
-    Sp_susc{1} = tmp.temp;
+    Sp_susc = cell(1,1);
     tmp = load([STG_path,'\NRG_Op=ImpSp1p.mat']);
-    Sp_susc{2} = tmp.temp;
-    tmp = load([STG_path,'\NRG_Op=ImpSp2m.mat']);
-    Sp_susc{3} = tmp.temp;
-    tmp = load([STG_path,'\NRG_Op=ImpSp2p.mat']);
-    Sp_susc{4} = tmp.temp;
+    Sp_susc{1} = tmp.temp;
+    %tmp = load([STG_path,'\NRG_Op=ImpSp1m.mat']);
+    %Sp_susc{2} = tmp.temp;
+    %tmp = load([STG_path,'\NRG_Op=ImpSp2p.mat']);
+    %Sp_susc{3} = tmp.temp;
+    %%tmp = load([STG_path,'\NRG_Op=ImpSp2m.mat']);
+    %Sp_susc{4} = tmp.temp;
+    
+
+    Lambda_susc = cell(1,2);
+    tmp = load([STG_path,'\NRG_Op=Lambda_p.mat']);
+    Lambda_susc{1} = tmp.temp;
+    tmp = load([STG_path,'\NRG_Op=Lambda_z.mat']);
+    Lambda_susc{2} = tmp.temp;
     
     figure;
     hold on;
     set(gca,'XScale','log','YScale','log');
     
-    legends = cell(1,8);
-    flav = {'1-', '1+', '2-', '2+'};
+    legends = cell(1,3);
+    flav = {'1+', '1-', '2+', '2-'};
     linestyle = {'-', '--', '-.', ':'};
-    
+ 
+    %{
     for itC = 1:4
         plot(ocont, Charge_susc{itC}, linestyle{itC}, 'LineWidth', 1.5);
         legends{itC} = ['$\chi_{\mathrm{c_{',flav{itC},'}}}^{\mathrm{imp}}$'];
     end
+    %}
     
-    for itS = 1:4
-        plot(ocont, Sp_susc{itS}, linestyle{itS}, 'LineWidth', 1.5);
-        legends{4+itS} = ['$\chi_{\mathrm{sp_{',flav{itS},'}}}^{\mathrm{imp}}$'];
+    for itS = 1:1
+        plot(ocont(ocont>0), Sp_susc{itS}(ocont>0), linestyle{itS}, 'LineWidth', 1.5);
+        legends{itS} = ['$\chi_{\mathrm{sp_{',flav{itS},'}}}^{\mathrm{imp}}$'];
     end
+
+    for itS = 1:2
+        plot(ocont(ocont>0), Lambda_susc{itS}(ocont>0), linestyle{itS}, 'LineWidth', 1.5);
+    end
+
+    legends{2} = '$\chi_{\Lambda +}$';
+    legends{3} = '$\chi_{\Lambda -}$';
     
-    legend(legends,'Interpreter','latex','FontSize',25);
+    legend(legends,'Interpreter','latex','FontSize',18, 'Location', 'southeast');
+    xlim([1e-8, 1e2]);
+    ylim([1e-15, 1]);
     hold off;
 end
 

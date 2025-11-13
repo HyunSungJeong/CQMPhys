@@ -1,9 +1,9 @@
 function RG_plot(J0, K0, I0, order)
 
-    Dmin = 1e-9; 
+    Dmin = 5e-6; 
     D0 = 1;
     
-    [J,K,I,log_D] = RG_PoorMan(J0,K0,I0,'order',order);
+    [J,K,I,log_D] = RG_PoorMan(J0,K0,I0,'order',order,'Rho',1);
 
     RGB = orderedcolors('gem');
     blue = RGB(1,:);
@@ -22,14 +22,14 @@ function RG_plot(J0, K0, I0, order)
     end
 
     set(gca, 'XScale', 'log', 'YScale', 'linear', 'FontSize', 18);
-    set(gca, 'XTick', 10.^(-9:3:0));
+    set(gca, 'XTick', 10.^(-5:1:0));
     set(gca, 'YTick', yticks);
     set(gca, 'FontSize', 24);
     set(gca, 'LineWidth', 1);  % make axis lines (incl. ticks) bold
     set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on');
     set(gca, 'MinorGridLineStyle', '-', 'MinorGridAlpha', 0.3);
     xlim([Dmin, D0]);
-    ylim([-0.1,ymax+0.4]);
+    ylim([min([J,K,I])-0.1,ymax+0.4]);
 
     LW = 3;
     J_handle = plot(exp(log_D), J, 'Color', blue, 'LineWidth', LW);

@@ -243,7 +243,6 @@ function [J, Phase_range, Phase_name, varargout] = PhaseRange_TJ(K0,I0,varargin)
         if HaveDisc
 
             if HaveCont
-                ImpSp{itSub} = ContData.ImpSp;
                 ImpOrb{itSub} = ContData.ImpOrb;
                 ImpSpOrb{itSub} = ContData.ImpSpOrb;
             else
