@@ -316,7 +316,9 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
     hdl_sporb_plus = plot(ocont, ImpSusc{4}, 'Color', [.494, .184, .556], 'LineWidth', 2);
     hdl_sporb_z = plot(ocont, ImpSusc{5}, 'Color', [.929, .694, .125], 'LineWidth', 2);
 
-    legend([hdl_sp, hdl_orb_plus, hdl_orb_z, hdl_sporb_plus, hdl_sporb_z], {'1', '2', '3', '4', '5'}, 'Interpreter', 'latex', 'NumColumns', 3, 'Location', 'best', 'FontSize', 18, 'Box', 'off');
+    legend([hdl_sp, hdl_orb_plus, hdl_orb_z, hdl_sporb_plus, hdl_sporb_z],...
+                {'$\chi_{\mathrm{sp}}$', '$\chi_{\mathrm{orb}}^{+}$', '$\chi_{\mathrm{orb}}^{z}$', '$\chi_{\mathrm{sp-orb}}^{+}$', '$\chi_{\mathrm{sp-orb}}^{z}$'},...
+                        'Interpreter', 'latex', 'NumColumns', 3, 'Location', 'best', 'FontSize', 18, 'Box', 'off');
 
     TempFontSize = 16;
     FS = 18;
