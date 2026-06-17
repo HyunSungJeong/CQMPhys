@@ -256,7 +256,7 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
     legends = legends(1:cnt_leg);
     handles = handles(1:cnt_leg);
     
-    legend(handles, legends, 'Interpreter', 'latex', 'NumColumns', 3, 'Location', 'best', 'FontSize', 18, 'Box', 'off');
+    legend(handles, legends, 'Interpreter', 'latex', 'NumColumns', 3, 'Location', 'best', 'FontSize', 15, 'Box', 'off');
 
     hold off;
 
@@ -485,7 +485,7 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
             Xfit = power(10, Xfit);     
 
             CritExp = round(10*abs(f(1))) / 10;     % critical exponent
-            
+
             if CritExp > 0
                     CritExp = CritExp * sign(f(1));
             end
@@ -533,7 +533,8 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
         if rem(X*2, 2) == 0
             Str = sprintf('%d',X);
         else
-            Str = ['\frac{', sprintf('%d',2*X), '}{2}'];
+            %Str = ['\frac{', sprintf('%d',2*X), '}{2}'];
+            Str = [sprintf('%d',2*X), '/2'];
         end
     end
 
