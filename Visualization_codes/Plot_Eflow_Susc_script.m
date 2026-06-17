@@ -612,3 +612,35 @@ SubFig_idx = {'$\mathrm{(a)}$', '$\mathrm{(b)}$', '$\mathrm{(c)}$'};
 alphaz = [1, 0.8];
 
 NRG_Aniso_RGflow_fig(0.3, 0.1, -0.3, 0, FitInfo, 'YLims', YLims, 'SubFig_idx', SubFig_idx, 'alphaz', alphaz);
+
+
+%% (J0, K_perp, K_z, I_perp) = (0, 0, 0, 0, 0.32)
+
+FitInfo.Imp{1}.Range = [];
+FitInfo.Imp{1}.LineShift = [];
+FitInfo.Imp{1}.TextShift = [];
+FitInfo.Imp{2}.Range = [];
+FitInfo.Imp{2}.LineShift = [];
+FitInfo.Imp{2}.TextShift = [];
+FitInfo.Imp{3}.Range = [];
+FitInfo.Imp{3}.LineShift = [];
+FitInfo.Imp{3}.TextShift = [];
+
+FitInfo.Bath{1}.Range = [];
+FitInfo.Bath{1}.LineShift = [];
+FitInfo.Bath{1}.TextShift = [];
+FitInfo.Bath{2}.Range = [];
+FitInfo.Bath{2}.LineShift = [];
+FitInfo.Bath{2}.TextShift = [];
+FitInfo.Bath{3}.Range = [];
+FitInfo.Bath{3}.LineShift = [];
+FitInfo.Bath{3}.TextShift = [];
+
+YLims = [1e-6, 1e16;
+         1e-11, 1e7];
+
+SubFig_idx = {'$\mathrm{(a)}$', '$\mathrm{(b)}$', '$\mathrm{(c)}$'};
+
+alphaz = [1, 0.8];
+
+NRG_Full_Aniso_RGflow_fig(0, 0, 0, 0, 0.32, FitInfo, 'YLims', YLims, 'SubFig_idx', SubFig_idx, 'alphaz', alphaz);
