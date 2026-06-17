@@ -619,24 +619,36 @@ NRG_Aniso_RGflow_fig(0.3, 0.1, -0.3, 0, FitInfo, 'YLims', YLims, 'SubFig_idx', S
 FitInfo.Imp{1}.Range = [];
 FitInfo.Imp{1}.LineShift = [];
 FitInfo.Imp{1}.TextShift = [];
-FitInfo.Imp{2}.Range = [];
-FitInfo.Imp{2}.LineShift = [];
-FitInfo.Imp{2}.TextShift = [];
+FitInfo.Imp{2}.Range = [-18, -14];
+FitInfo.Imp{2}.LineShift = [4];
+FitInfo.Imp{2}.TextShift = [-0.2, 1.7];
 FitInfo.Imp{3}.Range = [];
 FitInfo.Imp{3}.LineShift = [];
 FitInfo.Imp{3}.TextShift = [];
+FitInfo.Imp{4}.Range = [];
+FitInfo.Imp{4}.LineShift = [];
+FitInfo.Imp{4}.TextShift = [];
+FitInfo.Imp{5}.Range = [-18, -14];
+FitInfo.Imp{5}.LineShift = [1/4];
+FitInfo.Imp{5}.TextShift = [-0.2, -2];
 
-FitInfo.Bath{1}.Range = [];
-FitInfo.Bath{1}.LineShift = [];
-FitInfo.Bath{1}.TextShift = [];
+FitInfo.Bath{1}.Range = [-18, -14; -10, -6];
+FitInfo.Bath{1}.LineShift = [1/4; 1/4];
+FitInfo.Bath{1}.TextShift = [-0.2, -2; -1.8, -2.8];
 FitInfo.Bath{2}.Range = [];
 FitInfo.Bath{2}.LineShift = [];
 FitInfo.Bath{2}.TextShift = [];
 FitInfo.Bath{3}.Range = [];
 FitInfo.Bath{3}.LineShift = [];
 FitInfo.Bath{3}.TextShift = [];
+FitInfo.Bath{4}.Range = [];
+FitInfo.Bath{4}.LineShift = [];
+FitInfo.Bath{4}.TextShift = [];
+FitInfo.Bath{5}.Range = [];
+FitInfo.Bath{5}.LineShift = [];
+FitInfo.Bath{5}.TextShift = [];
 
-YLims = [1e-6, 1e12;
+YLims = [1e-6, 1e13;
          1e-11, 1e7];
 
 SubFig_idx = {'$\mathrm{(a)}$', '$\mathrm{(b)}$', '$\mathrm{(c)}$'};

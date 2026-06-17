@@ -318,14 +318,14 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
 
     legend([hdl_sp, hdl_orb_plus, hdl_orb_z, hdl_sporb_plus, hdl_sporb_z],...
                 {'$\chi_{\mathrm{sp}}$', '$\chi_{\mathrm{orb}}^{+}$', '$\chi_{\mathrm{orb}}^{z}$', '$\chi_{\mathrm{sp-orb}}^{+}$', '$\chi_{\mathrm{sp-orb}}^{z}$'},...
-                        'Interpreter', 'latex', 'NumColumns', 3, 'Location', 'best', 'FontSize', 18, 'Box', 'off');
+                        'Interpreter', 'latex', 'NumColumns', 3, 'Location', 'best', 'FontSize', 18, 'Box', 'off', 'AutoUpdate', 'off');
 
     TempFontSize = 16;
     FS = 18;
 
     % linear fit and show power laws
     %{}
-    for itS = 1:3
+    for itS = 1:5
         FitRange = FitInfo.Imp{itS}.Range;
         LineShift = FitInfo.Imp{itS}.LineShift;
         TextShift = FitInfo.Imp{itS}.TextShift;
@@ -345,22 +345,14 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
             Yfit = polyval(f, Xfit);
             Xfit = power(10, Xfit);     
 
-            if itS < 3
-                CritExp = round(abs(f(1)));  % critical exponent
-            else
-                CritExp = round(10*abs(f(1))) / 10;
-            end
+            CritExp = round(10*abs(f(1))) / 10;     % critical exponent
 
             if CritExp > 0
                     CritExp = CritExp * sign(f(1));
             end
 
-            if itS < 3
-                CritExp = sprintf('%d',CritExp);
-            else
-                CritExp = sprintf('%.1f',CritExp);
-            end
-
+            CritExp = sprintf('%.1f',CritExp);
+            
             Yfit = power(10, Yfit) * LShift;
         
             % plot the linear fit result
@@ -472,7 +464,7 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
     end
 
     % linear fit and show power laws
-    for itS = 1:3
+    for itS = 1:5
         FitRange = FitInfo.Bath{itS}.Range;
         LineShift = FitInfo.Bath{itS}.LineShift;
         TextShift = FitInfo.Bath{itS}.TextShift;
@@ -492,22 +484,14 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
             Yfit = polyval(f, Xfit);
             Xfit = power(10, Xfit);     
 
-            if itS < 3
-                CritExp = round(abs(f(1)));  % critical exponent
-            else
-                CritExp = round(10*abs(f(1))) / 10;
-            end
-
+            CritExp = round(10*abs(f(1))) / 10;     % critical exponent
+            
             if CritExp > 0
                     CritExp = CritExp * sign(f(1));
             end
-
-            if itS < 3
-                CritExp = sprintf('%d',CritExp);
-            else
-                CritExp = sprintf('%.1f',CritExp);
-            end
-
+            
+            CritExp = sprintf('%.1f',CritExp);
+            
             Yfit = power(10, Yfit) * LShift;
         
             % plot the linear fit result
