@@ -35,8 +35,9 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
         1, -1, 0;
         -2, 0, 2;
         0, 0, 2;
-        1, -1, 2;
-        -1, -1, 2
+        %1, -1, 2;
+        -1, -1, 2;
+        0, -2, 2
         ];
 
     ColorDict = [
@@ -47,8 +48,9 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
         .929, .694, .125;
         1, 0, 1;
         0, .5, .3;
-        .475, .435, .655;
-        .745, .792, .259
+        %.475, .435, .655;
+        .745, .792, .259;
+        .100, .750, .850
         ];
 
     LinestyleDict = {'--', '-', '-', '-', '--', '--', '--', '-', '-'};
@@ -441,6 +443,8 @@ function NRG_Full_Aniso_RGflow_fig(J0, K_perp, K_z, I_perp, I_z, FitInfo, vararg
     plot(ocont, BathSusc{1}, 'Color', [.466, .674, .188], 'LineWidth', 2);
     plot(ocont, BathSusc{2}, 'Color', [.850, .325, .098], 'LineWidth', 2);
     plot(ocont, BathSusc{3}, 'Color', [0, .447, .741], 'LineWidth', 2);
+    plot(ocont, BathSusc{4}, 'Color', [.494, .184, .556], 'LineWidth', 2);
+    plot(ocont, BathSusc{5}, 'Color', [.929, .694, .125], 'LineWidth', 2);
 
     % Mark characteristic energy scales
     Scale_names = {'FO','SO','OO','FL'};

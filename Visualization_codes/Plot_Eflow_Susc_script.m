@@ -636,7 +636,7 @@ FitInfo.Bath{3}.Range = [];
 FitInfo.Bath{3}.LineShift = [];
 FitInfo.Bath{3}.TextShift = [];
 
-YLims = [1e-6, 1e16;
+YLims = [1e-6, 1e12;
          1e-11, 1e7];
 
 SubFig_idx = {'$\mathrm{(a)}$', '$\mathrm{(b)}$', '$\mathrm{(c)}$'};
